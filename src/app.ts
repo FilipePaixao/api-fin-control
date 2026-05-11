@@ -1,3 +1,4 @@
+import './configuration/dotenv';
 import path from 'path';
 import { Server } from './domain/server/server';
 

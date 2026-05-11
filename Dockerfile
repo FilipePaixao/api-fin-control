@@ -1,7 +1,7 @@
 FROM node:20.13.1-alpine3.18
 
-WORKDIR /whitebeard
-COPY . /whitebeard/
+WORKDIR /sauvvitech
+COPY . /sauvvitech/
 
 ARG PORT=3000
 ARG VERSION=latest

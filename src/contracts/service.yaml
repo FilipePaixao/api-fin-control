@@ -38,6 +38,18 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/User'
+        '400':
+          description: Missing x-user-groups header (authorization middleware)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthMiddlewareError'
+        '403':
+          description: Caller is not in an allowed user group
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthMiddlewareError'
         '500':
           description: Server error
           content:
@@ -68,6 +80,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidationError'
+        '409':
+          description: Resource conflict (e.g. email already registered)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
         '500':
           description: Server error
           content:
@@ -100,7 +118,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/TranslatedApiError'
         '500':
           description: Server error
           content:
@@ -143,7 +161,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/TranslatedApiError'
         '500':
           description: Server error
           content:
@@ -174,7 +192,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/TranslatedApiError'
         '500':
           description: Server error
           content:
@@ -184,6 +202,32 @@ paths:
 
 components:
   schemas:
+    AuthMiddlewareError:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message from authorization middleware
+          example: 'Missing x-user-groups header'
+    TranslatedApiError:
+      type: object
+      required:
+        - error
+        - code
+      properties:
+        error:
+          type: string
+          description: Localized error message (from error catalog)
+        code:
+          type: string
+          description: Stable machine-readable error code
+          example: 'RESOURCE_NOT_FOUND'
+        contextInfo:
+          type: object
+          description: Optional extra context from the service layer
+          additionalProperties: true
     User:
       type: object
       properties:

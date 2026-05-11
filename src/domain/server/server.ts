@@ -13,6 +13,7 @@ import * as OpenApiValidator from 'express-openapi-validator';
 import helmet from 'helmet';
 import { HttpError } from 'express-openapi-validator/dist/framework/types';
 
+
 export class Server {
   public app: Application;
 
