@@ -1,5 +1,5 @@
 import { IUser } from '../../../../domain/user/entity/interfaces/user.interface';
-import { IMUser } from '../../../db/mongo/interfaces/user.interface';
+import { IMUser } from '../../../db/mongo/models/user.model';
 
 export function dbToInternal(user: IMUser): IUser {
   return {
