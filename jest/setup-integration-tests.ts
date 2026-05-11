@@ -1,5 +1,6 @@
 import { bootstrapTest } from '../src/__tests__/testUtils';
 import { Server } from '../src/domain/server/server';
+import { UserModel } from '../src/infraestructure/db/mongo/models/user.model';
 import { MongooseDatabase } from './setup-db';
 
 let dbInstance: MongooseDatabase;
@@ -12,5 +13,6 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  await UserModel.deleteMany({});
   await dbInstance?.close();
 });

@@ -1,12 +1,15 @@
+import { UserServiceEntity } from '../entity/user.entity';
+import { IUser } from '../entity/interfaces/user.interface';
 import { IUserRepositoryRead } from '../repository/user.repository.read';
 import { IUserRepositoryWrite } from '../repository/user.repository.write';
-import { IUser } from '../interfaces/user.interface';
 import {
   IParamsCreateUser,
   IParamsUpdateUser,
   IParamsUserService,
   IUserService,
 } from '../interfaces/user.service.interface';
+import { IThrowedError } from '@sauvvitech/st-packages';
+import { EErrorCode } from '../../common/errors/enums/EErrorCode';
 
 export class UserService implements IUserService {
   private userRepositoryRead: IUserRepositoryRead;
@@ -23,19 +26,20 @@ export class UserService implements IUserService {
    * @returns The created user document
    */
   async createUser(params: IParamsCreateUser): Promise<IUser> {
-    try {
-      // Business logic (e.g., validation, ID/email uniqueness checks)
-      const existingUser = await this.userRepositoryRead.findUserByEmail(
-        params.email,
-      );
-      if (existingUser) {
-        throw new Error('A user with this email already exists');
-      }
-
-      return await this.userRepositoryWrite.createUser(params);
-    } catch (error) {
-      throw new Error(`Error creating user: ${(error as Error).message}`);
+    const existingUser = await this.userRepositoryRead.findUserByEmail(
+      params.email,
+    );
+    if (existingUser) {
+      throw {
+        status: 409,
+        errorCode: EErrorCode.RESOURCE_CONFLICT,
+        message: 'A user with this email already exists',
+        details: { email: params.email },
+      } as IThrowedError;
     }
+
+    const userEntity = new UserServiceEntity(params);
+    return await this.userRepositoryWrite.createUser(userEntity);
   }
 
   /**
@@ -43,18 +47,17 @@ export class UserService implements IUserService {
    * @param id - The user's ID
    * @returns The user document or null if not found
    */
-  async getUserById(id: string): Promise<IUser | null> {
-    try {
-      const user = await this.userRepositoryRead.findUserById(id);
-      if (!user) {
-        throw new Error('User not found');
-      }
-      return user;
-    } catch (error) {
-      throw new Error(
-        `Error retrieving user by ID: ${(error as Error).message}`,
-      );
+  async getUserById(id: string): Promise<IUser> {
+    const user = await this.userRepositoryRead.findUserById(id);
+    if (!user) {
+      throw {
+        status: 404,
+        errorCode: EErrorCode.RESOURCE_NOT_FOUND,
+        message: 'User not found',
+        details: { id },
+      } as IThrowedError;
     }
+    return user;
   }
 
   /**
@@ -62,18 +65,17 @@ export class UserService implements IUserService {
    * @param email - The user's email
    * @returns The user document or null if not found
    */
-  async getUserByEmail(email: string): Promise<IUser | null> {
-    try {
-      const user = await this.userRepositoryRead.findUserByEmail(email);
-      if (!user) {
-        throw new Error('User not found');
-      }
-      return user;
-    } catch (error) {
-      throw new Error(
-        `Error retrieving user by email: ${(error as Error).message}`,
-      );
+  async getUserByEmail(email: string): Promise<IUser> {
+    const user = await this.userRepositoryRead.findUserByEmail(email);
+    if (!user) {
+      throw {
+        status: 404,
+        errorCode: EErrorCode.RESOURCE_NOT_FOUND,
+        message: 'User not found',
+        details: { email },
+      } as IThrowedError;
     }
+    return user;
   }
 
   /**
@@ -85,17 +87,30 @@ export class UserService implements IUserService {
   async updateUserById(
     id: string,
     params: IParamsUpdateUser,
-  ): Promise<IUser | null> {
-    try {
-      const user = await this.userRepositoryRead.findUserById(id);
-      if (!user) {
-        throw new Error('User not found');
-      }
-
-      return await this.userRepositoryWrite.updateUserById(id, params.userData);
-    } catch (error) {
-      throw new Error(`Error updating user: ${(error as Error).message}`);
+  ): Promise<IUser> {
+    const user = await this.userRepositoryRead.findUserById(id);
+    if (!user) {
+      throw {
+        status: 404,
+        errorCode: EErrorCode.RESOURCE_NOT_FOUND,
+        message: 'User not found',
+        details: { id },
+      } as IThrowedError;
     }
+
+    const updated = await this.userRepositoryWrite.updateUserById(
+      id,
+      params.userData,
+    );
+    if (!updated) {
+      throw {
+        status: 404,
+        errorCode: EErrorCode.RESOURCE_NOT_FOUND,
+        message: 'User not found',
+        details: { id },
+      } as IThrowedError;
+    }
+    return updated;
   }
 
   /**
@@ -103,18 +118,19 @@ export class UserService implements IUserService {
    * @param id - The user's ID
    * @returns The deleted user document or null if not found
    */
-  async deleteUserById(id: string): Promise<IUser | null> {
-    try {
-      const user = await this.userRepositoryRead.findUserById(id);
-      if (!user) {
-        throw new Error('User not found');
-      }
-
-      await this.userRepositoryWrite.deleteUserById(id);
-      return user;
-    } catch (error) {
-      throw new Error(`Error deleting user: ${(error as Error).message}`);
+  async deleteUserById(id: string): Promise<IUser> {
+    const user = await this.userRepositoryRead.findUserById(id);
+    if (!user) {
+      throw {
+        status: 404,
+        errorCode: EErrorCode.RESOURCE_NOT_FOUND,
+        message: 'User not found',
+        details: { id },
+      } as IThrowedError;
     }
+
+    await this.userRepositoryWrite.deleteUserById(id);
+    return user;
   }
 
   /**
@@ -123,10 +139,6 @@ export class UserService implements IUserService {
    * @returns An array of user documents
    */
   async listUsers(filter: Partial<IUser> = {}): Promise<IUser[]> {
-    try {
-      return await this.userRepositoryRead.listUsers(filter);
-    } catch (error) {
-      throw new Error(`Error listing users: ${(error as Error).message}`);
-    }
+    return await this.userRepositoryRead.listUsers(filter);
   }
 }

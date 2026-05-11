@@ -12,19 +12,19 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-const UserModel = mongoose.model('User', userSchema);
+const TestUserModel = mongoose.model('TestUser', userSchema);
 
 afterEach(async () => {
-  await UserModel.deleteMany({});
+  await TestUserModel.deleteMany({});
 });
 
 describe('When we try to create & save a user', () => {
   it('should return the saved user successfully', async () => {
     const userData = { name: 'Lucas', email: 'lucas@whitebeard.com' };
-    const validUser = new UserModel(userData);
+    const validUser = new TestUserModel(userData);
     await validUser.save();
 
-    const savedUser = await UserModel.findOne({ email: userData.email });
+    const savedUser = await TestUserModel.findOne({ email: userData.email });
 
     expect(savedUser).toBeDefined();
     expect(savedUser!.name).toBe(userData.name);

@@ -1,4 +1,4 @@
-import { IUser } from '../interfaces/user.interface';
+import { IUser } from '../entity/interfaces/user.interface';
 
 export interface IUserRepositoryRead {
   findUserByEmail(email: string): Promise<IUser | null>;
