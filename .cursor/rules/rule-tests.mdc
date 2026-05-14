@@ -1,0 +1,32 @@
+---
+description: Testes Jest — espelhar camadas, naming *.int/*.unit, mocks e cobertura (AGENTS.md)
+globs: src/__tests__/**/*
+alwaysApply: false
+---
+
+# Testes (`src/__tests__`)
+
+Segue [AGENTS.md](AGENTS.md) (secção 4) e **os padrões já usados** no repo; novos testes devem **parecer** os existentes (ex.: `integration/user/...`).
+
+## Organização (espelho por contexto)
+
+- **Integração:** `integration/<contexto>/controller|service|repository/` — um ficheiro por fluxo ou operação, alinhado à pasta de produção que testas.
+- **Unitários:** `unit/<contexto>/service/` (e outras pastas `unit/` só se o projeto já tiver o precedente).
+- **Mocks partilhados:** `__mocks__/` (ex. `user.mock.ts` com factories tipo `validUserMock(...)`).
+
+## Naming de ficheiros
+
+- Integração: `*.int.test.ts` (ex.: `create-user.int.test.ts`).
+- Unitários: `*.unit.test.ts`.
+
+## Padrões de escrita
+
+- **describe / it** claros; descrições em estilo comportamental são bem-vindas (ex.: “When we try to create a valid user”).
+- **Integração HTTP:** usar `supertest` com a app exposta pelo setup de integração (ex. import de `jest/setup-integration-tests` como nos testes atuais de controller); não duplicar bootstrap à mão sem necessidade.
+- **Integração com Mongo:** quando o teste valida persistência, confirmar estado com **model**/`UserModel` apenas na camada de teste (aceitável em testes de integração), mantendo produção alinhada à arquitetura em camadas.
+- **Asserções:** status HTTP, corpo (`toMatchObject`), e campos de data/contrato quando relevante; evitar testes fracos que não assertam o comportamento principal.
+
+## Qualidade e comandos
+
+- `yarn test`; cobertura `yarn test:coverage` com meta **≥ 80%** linhas/ramos.
+- Novos endpoints ou serviços: adicionar testes na pasta certa e reutilizar `__mocks__` / utilitários existentes (`testUtils.ts`, `configApp.ts`) em vez de reinventar setup.
