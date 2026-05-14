@@ -1,0 +1,14 @@
+---
+description: Núcleo do st-node-boilerplate — camadas, ortografia de pastas e AGENTS.md
+alwaysApply: true
+---
+
+# st-node-boilerplate — núcleo
+
+- Fonte de verdade: [AGENTS.md](AGENTS.md) e [docs/arquitetura-e-camadas.md](docs/arquitetura-e-camadas.md).
+- Pastas fixas: **`infraestructure`** (com “e”), **`configuration`** (singular) — não renomear para “infrastructure” / “configurations”.
+- **Domain** não importa **Infraestructure** (sem Mongoose, `IM*`, Kafka concreto no domain).
+- Contratos de repositório no domain (`I*RepositoryRead` / `I*RepositoryWrite`); implementações em `src/infraestructure/repository/<contexto>/`.
+- Composição e DI em `src/configuration/factory/`.
+- Testes em `src/__tests__/`; cobertura alvo ≥ 80% (`yarn test:coverage` em AGENTS.md).
+- Endpoints: ao mudar rotas/contratos, atualizar [src/contracts/service.yaml](src/contracts/service.yaml).

@@ -1,0 +1,14 @@
+---
+description: Camada Infraestructure — Mongo IM*, adapters, repos, messaging
+globs: src/infraestructure/**/*.ts
+alwaysApply: false
+---
+
+# Infraestructure (`src/infraestructure`)
+
+- Modelos Mongo: interface **`IM*`** estende `I*` de domínio + `_id`, `updatedAt`, etc. (ver AGENTS.md).
+- Schema em `db/mongo/schema/`, model em `db/mongo/models/`, interface `IM*` em `db/mongo/interfaces/`.
+- Repositórios concretos implementam contratos do domain; usam **adapters** puros:
+  - `dbToInternal(IM*) → I*`
+  - `internalToDb(I*)` sem efeitos colaterais
+- Kafka: implementações em `messaging/<evento>/`; contratos ficam no **domain**.

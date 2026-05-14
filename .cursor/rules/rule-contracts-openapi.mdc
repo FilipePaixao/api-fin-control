@@ -1,0 +1,11 @@
+---
+description: Contrato OpenAPI — service.yaml alinhado à API HTTP
+globs: src/contracts/**/*
+alwaysApply: false
+---
+
+# Contracts (`src/contracts`)
+
+- Especificação principal: [src/contracts/service.yaml](src/contracts/service.yaml).
+- Qualquer alteração de **path**, método, request/response ou códigos documentados na API exposta deve refletir-se no YAML.
+- Manter consistência com controllers e rotas reais em `src/application`.

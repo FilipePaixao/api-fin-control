@@ -1,0 +1,12 @@
+---
+description: Camada Application — controllers Express finos
+globs: src/application/**/*.ts
+alwaysApply: false
+---
+
+# Application (`src/application`)
+
+- Controllers **finos**: extrair `params`/`body`/`query`, chamar o **service**, definir status e JSON.
+- Implementar `IController` do domain quando aplicável; rotas no router do controller.
+- **Evitar:** regras de negócio pesadas, validação de unicidade com modelo Mongo, instanciar repositórios à mão (usar **factories** em configuration).
+- Erros HTTP: padrão do projeto (ex. `handleTranslatedError` + catálogo) quando existir.

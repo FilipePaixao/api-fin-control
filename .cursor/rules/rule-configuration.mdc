@@ -1,0 +1,11 @@
+---
+description: Configuration — dotenv, env, factories de composição
+globs: src/configuration/**/*.ts
+alwaysApply: false
+---
+
+# Configuration (`src/configuration`)
+
+- **Factories** em `factory/`: `*.controller.factory.ts`, `*.service.factory.ts`, messaging em `factory/messaging/` quando existir.
+- Responsabilidade: **montar** o grafo (controllers ← services ← repos concretos / producers); não colocar regras de negócio aqui.
+- Env: `dotenv.ts`, `env-constants/` — constantes nomeadas, sem espalhar `process.env` pelo domain.

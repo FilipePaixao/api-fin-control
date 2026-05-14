@@ -1,0 +1,14 @@
+---
+description: Camada Domain — interfaces, entities, contratos de repo/service
+globs: src/domain/**/*.ts
+alwaysApply: false
+---
+
+# Domain (`src/domain`)
+
+- Interfaces de domínio: prefixo **`I`** (ex.: `IUser`, `IUserService`).
+- Contratos: `*.repository.read.ts` / `*.repository.write.ts` com `I*RepositoryRead` / `I*RepositoryWrite`.
+- Entities: validação no construtor; ficheiro `<contexto>.entity.ts` em `entity/`.
+- **Proibido:** importar `src/infraestructure`, `mongoose`, modelos `IM*`, producers Kafka concretos.
+- Serviços dependem só de interfaces de repositório e de tipos de domínio.
+- Messaging: apenas **interfaces** em `domain/<contexto>/messaging/<evento>/` (ex. `producer.interface.kafka.ts`).

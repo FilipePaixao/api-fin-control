@@ -24,7 +24,7 @@ flowchart TB
   SRV --> REPO["Repository<br/>contrato no Domain · implementação na Infraestructure"]
   REPO --> IM["Modelo Mongo (IM*)"]
   IM <-->|dbToInternal / internalToDb| ADP["Adapter"]
-  ADP <-->|objeto exposto ao domínio| IU["IUser"]
+  ADP <-->|objeto exposto ao domínio| IU["IAppointment"]
 ```
 
 **Regra de ouro:** o **Domain** não deve importar **Infraestructure** (sem Mongoose, sem modelos `IM*`, sem Kafka concreto). Quem “conhece” o banco e frameworks externos são **Application**, **Infraestructure** e **Configuration**.
@@ -47,20 +47,20 @@ flowchart TB
 
   subgraph config["Configuration"]
     DOT["dotenv.ts"]
-    UCF["UserControllerFactory"]
-    USF["UserServiceFactory"]
+    UCF["AppointmentControllerFactory"]
+    USF["AppointmentServiceFactory"]
   end
 
   subgraph application["Application"]
-    UC["UserController\n(Router + handlers)"]
+    UC["AppointmentController\n(Router + handlers)"]
   end
 
   subgraph domain["Domain"]
-    SRV["UserService"]
-    ENT["UserServiceEntity"]
-    IR["IUserRepositoryRead"]
-    IW["IUserRepositoryWrite"]
-    IU["IUser / IUserService"]
+    SRV["AppointmentService"]
+    ENT["AppointmentServiceEntity"]
+    IR["IAppointmentRepositoryRead"]
+    IW["IAppointmentRepositoryWrite"]
+    IU["IAppointment / IAppointmentService"]
     SRV --> IR
     SRV --> IW
     SRV --> ENT
@@ -68,10 +68,10 @@ flowchart TB
   end
 
   subgraph infra["Infraestructure"]
-    RREAD["UserRepositoryRead"]
-    RWRITE["UserRepositoryWrite"]
-    ADP["user.adapter\ndbToInternal / internalToDb"]
-    MOD["UserModel + UserSchema\n(IMUser)"]
+    RREAD["AppointmentRepositoryRead"]
+    RWRITE["AppointmentRepositoryWrite"]
+    ADP["appointment.adapter\ndbToInternal / internalToDb"]
+    MOD["AppointmentModel + AppointmentSchema\n(IMAppointment)"]
     I18N["error-catalog\n(i18n)"]
     RREAD --> ADP
     RWRITE --> ADP
@@ -107,11 +107,11 @@ Ordem lógica: carregar variáveis de ambiente → instanciar `Server` com contr
 ```mermaid
 flowchart LR
   A["import dotenv"] --> B["new Server(...)"]
-  B --> C["UserControllerFactory.create()"]
-  C --> D["UserServiceFactory.create()"]
-  D --> E["new UserRepositoryRead/Write"]
-  D --> F["new UserService"]
-  C --> G["new UserController"]
+  B --> C["AppointmentControllerFactory.create()"]
+  C --> D["AppointmentServiceFactory.create()"]
+  D --> E["new AppointmentRepositoryRead/Write"]
+  D --> F["new AppointmentService"]
+  C --> G["new AppointmentController"]
   B --> H["databaseSetup()"]
   H --> I["listen()"]
 ```
@@ -120,39 +120,39 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  DOC["Documento Mongoose\nIMUser"]
+  DOC["Documento Mongoose\nIMAppointment"]
   ADP["Adapter\ndbToInternal"]
-  DOM["IUser\n(resposta HTTP)"]
+  DOM["IAppointment\n(resposta HTTP)"]
   DOC --> ADP --> DOM
 ```
 
-No sentido **escrita**, `internalToDb(IUser)` produz o payload persistível (sem `_id` / timestamps geridos pelo schema).
+No sentido **escrita**, `internalToDb(IAppointment)` produz o payload persistível (sem `_id` / timestamps geridos pelo schema).
 
-#### Sequência: leitura de usuário por ID (`GET /users/:id`)
+#### Sequência: leitura de usuário por ID (`GET /appointments/:id`)
 
 ```mermaid
 sequenceDiagram
   autonumber
   participant C as Cliente HTTP
   participant SV as Server + OpenAPI
-  participant CT as UserController
-  participant S as UserService
-  participant RR as UserRepositoryRead
-  participant M as UserModel
+  participant CT as AppointmentController
+  participant S as AppointmentService
+  participant RR as AppointmentRepositoryRead
+  participant M as AppointmentModel
   participant A as Adapter dbToInternal
 
-  C->>SV: GET /users/:id
-  SV->>CT: getUserById(req, res)
-  CT->>S: getUserById(id)
-  S->>RR: findUserById(id)
+  C->>SV: GET /appointments/:id
+  SV->>CT: getAppointmentById(req, res)
+  CT->>S: getAppointmentById(id)
+  S->>RR: findAppointmentById(id)
   RR->>M: findOne({ id })
-  M-->>RR: IMUser | null
+  M-->>RR: IMAppointment | null
   alt documento encontrado
     RR->>A: dbToInternal(doc)
-    A-->>RR: IUser
-    RR-->>S: IUser
-    S-->>CT: IUser
-    CT-->>C: 200 + JSON IUser
+    A-->>RR: IAppointment
+    RR-->>S: IAppointment
+    S-->>CT: IAppointment
+    CT-->>C: 200 + JSON IAppointment
   else não encontrado
     RR-->>S: null
     S-->>CT: throw IThrowedError 404
@@ -160,34 +160,34 @@ sequenceDiagram
   end
 ```
 
-#### Sequência: criação de usuário (`POST /users`)
+#### Sequência: criação de usuário (`POST /appointments`)
 
 ```mermaid
 sequenceDiagram
   autonumber
   participant C as Cliente HTTP
-  participant CT as UserController
-  participant S as UserService
-  participant RR as UserRepositoryRead
-  participant RW as UserRepositoryWrite
-  participant E as UserServiceEntity
-  participant M as UserModel
+  participant CT as AppointmentController
+  participant S as AppointmentService
+  participant RR as AppointmentRepositoryRead
+  participant RW as AppointmentRepositoryWrite
+  participant E as AppointmentServiceEntity
+  participant M as AppointmentModel
 
-  C->>CT: POST /users + body
-  CT->>S: createUser(params)
-  S->>RR: findUserByEmail(email)
-  RR-->>S: null | IUser
+  C->>CT: POST /appointments + body
+  CT->>S: createAppointment(params)
+  S->>RR: findAppointmentByEmail(email)
+  RR-->>S: null | IAppointment
   alt email já existe
     S-->>CT: throw 409
     CT-->>C: 409
   else email livre
-    S->>E: new UserServiceEntity(params)
-    E-->>S: IUser validado
-    S->>RW: createUser(IUser)
+    S->>E: new AppointmentServiceEntity(params)
+    E-->>S: IAppointment validado
+    S->>RW: createAppointment(IAppointment)
     RW->>M: save / create
-    M-->>RW: IMUser
-    RW-->>S: IUser
-    S-->>CT: IUser
+    M-->>RW: IMAppointment
+    RW-->>S: IAppointment
+    S-->>CT: IAppointment
     CT-->>C: 201 + JSON
   end
 ```
@@ -196,17 +196,17 @@ sequenceDiagram
 
 ```mermaid
 flowchart TB
-  S["UserService"]
+  S["AppointmentService"]
 
   subgraph readSide["Leitura"]
-    IRR["IUserRepositoryRead"]
-    RREAD["UserRepositoryRead"]
+    IRR["IAppointmentRepositoryRead"]
+    RREAD["AppointmentRepositoryRead"]
     RREAD -.-> IRR
   end
 
   subgraph writeSide["Escrita"]
-    IRW["IUserRepositoryWrite"]
-    RWRITE["UserRepositoryWrite"]
+    IRW["IAppointmentRepositoryWrite"]
+    RWRITE["AppointmentRepositoryWrite"]
     RWRITE -.-> IRW
   end
 
@@ -221,8 +221,8 @@ Quando existir messaging, o **contrato** nasce no domain e a **implementação**
 ```mermaid
 flowchart LR
   subgraph domainKafka["Domain"]
-    PKI["IUserApprovedProducer\n(interface)"]
-    S2["UserService"]
+    PKI["IAppointmentApprovedProducer\n(interface)"]
+    S2["AppointmentService"]
     S2 --> PKI
   end
 
@@ -256,32 +256,32 @@ flowchart LR
 
 ### 3.1 O que é
 
-O domínio concentra **interfaces** (`IUser`, `IUserRepositoryRead`), **classes de entidade** com validação (`UserServiceEntity`), **serviços** que orquestram regras (`UserService`) e **contratos** que a infraestrutura implementará depois.
+O domínio concentra **interfaces** (`IAppointment`, `IAppointmentRepositoryRead`), **classes de entidade** com validação (`AppointmentServiceEntity`), **serviços** que orquestram regras (`AppointmentService`) e **contratos** que a infraestrutura implementará depois.
 
 ### 3.2 Padrões a seguir
 
-- Prefixo **`I`** para interfaces de domínio (`IUser`, `IUserService`).
+- Prefixo **`I`** para interfaces de domínio (`IAppointment`, `IAppointmentService`).
 - Contratos de repositório separados em **leitura** e **escrita**:
-  - `user.repository.read.ts` → `IUserRepositoryRead`
-  - `user.repository.write.ts` → `IUserRepositoryWrite`
+  - `appointment.repository.read.ts` → `IAppointmentRepositoryRead`
+  - `appointment.repository.write.ts` → `IAppointmentRepositoryWrite`
 - Serviço depende **apenas de interfaces** de repositório, não de classes Mongo.
 
 **Exemplo alinhado ao projeto (trecho conceitual):**
 
 ```ts
-// src/domain/user/service/user.service.ts — padrão: injetar contratos
-import { IUserRepositoryRead } from '../repository/user.repository.read';
-import { IUserRepositoryWrite } from '../repository/user.repository.write';
+// src/domain/appointment/service/appointment.service.ts — padrão: injetar contratos
+import { IAppointmentRepositoryRead } from '../repository/appointment.repository.read';
+import { IAppointmentRepositoryWrite } from '../repository/appointment.repository.write';
 
-export class UserService {
+export class AppointmentService {
   constructor(
-    private readonly userRepositoryRead: IUserRepositoryRead,
-    private readonly userRepositoryWrite: IUserRepositoryWrite,
+    private readonly appointmentRepositoryRead: IAppointmentRepositoryRead,
+    private readonly appointmentRepositoryWrite: IAppointmentRepositoryWrite,
   ) {}
 
-  async createUser(/* ... */): Promise<IUser> {
+  async createAppointment(/* ... */): Promise<IAppointment> {
     // regras: unicidade de email, entity, etc.
-    return this.userRepositoryWrite.createUser(/* IUser */);
+    return this.appointmentRepositoryWrite.createAppointment(/* IAppointment */);
   }
 }
 ```
@@ -290,18 +290,18 @@ export class UserService {
 
 | Pode | Não pode |
 |------|----------|
-| Importar apenas outros módulos do `domain` e pacotes agnósticos (tipos, util genérico) | Importar `mongoose`, `UserModel`, `IMUser` ou qualquer arquivo em `src/infraestructure` |
+| Importar apenas outros módulos do `domain` e pacotes agnósticos (tipos, util genérico) | Importar `mongoose`, `AppointmentModel`, `IMAppointment` ou qualquer arquivo em `src/infraestructure` |
 | Lançar erros de negócio com formato acordado (ex.: `IThrowedError` + `EErrorCode`) | Abrir conexão com banco ou ler `process.env` diretamente no service (preferir passar config pela factory) |
-| Usar **entity** para validar e montar `IUser` antes de persistir | Colocar queries Mongo ou detalhe de documento no service |
+| Usar **entity** para validar e montar `IAppointment` antes de persistir | Colocar queries Mongo ou detalhe de documento no service |
 
 **Ruim (viola camada):**
 
 ```ts
-// ❌ NUNCA no domain/user/service
-import { UserModel } from '../../infraestructure/db/mongo/models/user.model';
+// ❌ NUNCA no domain/appointment/service
+import { AppointmentModel } from '../../infraestructure/db/mongo/models/appointment.model';
 
 async getUser(id: string) {
-  return UserModel.findOne({ id }); // acopla domínio ao Mongo
+  return AppointmentModel.findOne({ id }); // acopla domínio ao Mongo
 }
 ```
 
@@ -309,7 +309,7 @@ async getUser(id: string) {
 
 ```ts
 // ✅ Service usa só o contrato
-const user = await this.userRepositoryRead.findUserById(id);
+const appointment = await this.appointmentRepositoryRead.findAppointmentById(id);
 ```
 
 ---
@@ -322,23 +322,23 @@ Controllers Express implementam `IController`, definem `Router`, leem `req`/`res
 
 ### 4.2 Padrões a seguir
 
-- Controller **fino**: try/catch, status HTTP, chamar `userService.*`.
-- Autorização e middlewares podem ficar nas rotas (como `authorizeByGroup` no `UserController`).
+- Controller **fino**: try/catch, status HTTP, chamar `appointmentService.*`.
+- Autorização e middlewares podem ficar nas rotas (como `authorizeByGroup` no `AppointmentController`).
 - Erros traduzidos: uso de `handleTranslatedError` com catálogo (`ErrorCatalog`) é um padrão observado no projeto.
 
 **Exemplo de responsabilidade correta:**
 
 ```ts
-createUser = async (req: Request, res: Response): Promise<void> => {
+createAppointment = async (req: Request, res: Response): Promise<void> => {
   const { id, name, email, createdAt } = req.body;
   try {
-    const newUser = await this.userService.createUser({
+    const newAppointment = await this.appointmentService.createAppointment({
       id,
       name,
       email,
       createdAt: createdAt ? new Date(createdAt) : new Date(),
     });
-    res.status(201).json(newUser);
+    res.status(201).json(newAppointment);
   } catch (error) {
     handleTranslatedError(error, ErrorCatalog, res);
   }
@@ -350,21 +350,21 @@ createUser = async (req: Request, res: Response): Promise<void> => {
 | Pode | Não pode |
 |------|----------|
 | Extrair `params`/`body`, chamar service, definir status | Implementar regra “email já existe” ou validação de negócio pesada |
-| Usar utilitários de infra para **borda HTTP** (ex.: catálogo de erros) | Instanciar `UserRepositoryRead` manualmente em todo método (use **factory**) |
-| Registrar rotas e middlewares | Acessar `UserModel` diretamente no controller |
+| Usar utilitários de infra para **borda HTTP** (ex.: catálogo de erros) | Instanciar `AppointmentRepositoryRead` manualmente em todo método (use **factory**) |
+| Registrar rotas e middlewares | Acessar `AppointmentModel` diretamente no controller |
 
 **Ruim:**
 
 ```ts
 // ❌ Lógica de negócio no controller
-createUser = async (req, res) => {
-  const existing = await UserModel.findOne({ email: req.body.email });
+createAppointment = async (req, res) => {
+  const existing = await AppointmentModel.findOne({ email: req.body.email });
   if (existing) return res.status(409).json({ message: 'Conflict' });
   // ...
 };
 ```
 
-**Bom:** delegar ao `UserService.createUser`, que já trata conflito e usa repositório.
+**Bom:** delegar ao `AppointmentService.createAppointment`, que já trata conflito e usa repositório.
 
 ---
 
@@ -380,22 +380,22 @@ Interfaces Mongo estendem o domínio e acrescentam campos de persistência:
 
 ```ts
 import { Types } from 'mongoose';
-import { IUser } from '../../../../domain/user/entity/interfaces/user.interface';
+import { IAppointment } from '../../../../domain/appointment/entity/interfaces/appointment.interface';
 
-export interface IMUser extends IUser {
+export interface IMAppointment extends IAppointment {
   _id: Types.ObjectId;
   updatedAt: Date;
 }
 ```
 
-Schema e model tipados com `IMUser`.
+Schema e model tipados com `IMAppointment`.
 
 ### 5.3 Adapter (funções puras)
 
 Conversão **sem efeitos colaterais** entre documento e domínio:
 
 ```ts
-export function dbToInternal(user: IMUser): IUser {
+export function dbToInternal(appointment: IMAppointment): IAppointment {
   return {
     id: user.id,
     name: user.name,
@@ -405,8 +405,8 @@ export function dbToInternal(user: IMUser): IUser {
 }
 
 export function internalToDb(
-  user: IUser,
-): Omit<IMUser, '_id' | 'createdAt' | 'updatedAt'> {
+  user: IAppointment,
+): Omit<IMAppointment, '_id' | 'createdAt' | 'updatedAt'> {
   return {
     id: user.id,
     name: user.name,
@@ -420,9 +420,9 @@ export function internalToDb(
 Implementa a interface do domain e usa **apenas** model + adapter:
 
 ```ts
-export class UserRepositoryRead implements IUserRepositoryRead {
-  async findUserById(id: string): Promise<IUser | null> {
-    const doc = await UserModel.findOne({ id });
+export class AppointmentRepositoryRead implements IAppointmentRepositoryRead {
+  async findAppointmentById(id: string): Promise<IAppointment | null> {
+    const doc = await AppointmentModel.findOne({ id });
     return doc ? dbToInternal(doc) : null;
   }
 }
@@ -433,15 +433,15 @@ export class UserRepositoryRead implements IUserRepositoryRead {
 | Pode | Não pode |
 |------|----------|
 | `findOne`, `create`, mapear com `dbToInternal` | Decidir regra de negócio “se não achar, é 404” (isso é **service**) |
-| Alterar índices/schema conforme necessidade de persistência | Expor `IMUser` para o controller (o mundo externo vê `IUser`) |
+| Alterar índices/schema conforme necessidade de persistência | Expor `IMAppointment` para o controller (o mundo externo vê `IAppointment`) |
 | Implementar contratos Kafka definidos no domain | Definir contrato de producer só na infra sem interface no domain |
 
 **Ruim:**
 
 ```ts
 // ❌ Repositório com regra de produto
-async findUserById(id: string): Promise<IUser> {
-  const doc = await UserModel.findOne({ id });
+async findAppointmentById(id: string): Promise<IAppointment> {
+  const doc = await AppointmentModel.findOne({ id });
   if (!doc) throw { status: 404, message: 'Not found' };
   return dbToInternal(doc);
 }
@@ -455,14 +455,14 @@ async findUserById(id: string): Promise<IUser> {
 
 ### 6.1 O que é
 
-**Factories** ligam interfaces a implementações: controller recebe service; service recebe `UserRepositoryRead` / `UserRepositoryWrite`.
+**Factories** ligam interfaces a implementações: controller recebe service; service recebe `AppointmentRepositoryRead` / `AppointmentRepositoryWrite`.
 
 **Exemplo de composição:**
 
 ```ts
-export class UserControllerFactory {
+export class AppointmentControllerFactory {
   static create(): IController {
-    return new UserController(UserServiceFactory.create());
+    return new AppointmentController(AppointmentServiceFactory.create());
   }
 }
 ```
@@ -486,7 +486,7 @@ export class UserControllerFactory {
 ## 8 Testes (`src/__tests__`)
 
 - **Integração:** controller, service, repositório com Mongo de teste (conforme pastas existentes).
-- **Unitário:** principalmente services e lógica isolada com mocks dos contratos `IUserRepositoryRead` / `Write`.
+- **Unitário:** principalmente services e lógica isolada com mocks dos contratos `IAppointmentRepositoryRead` / `Write`.
 
 Meta de qualidade do projeto: cobertura **≥ 80%** (`yarn test:coverage`), ESLint e Prettier.
 
@@ -522,7 +522,7 @@ Infraestructure  implements contracts declared in Domain
 ```
 
 - **Domain** não depende de **Infraestructure**.
-- **Infraestructure** depende de **Domain** (interfaces, `IUser`).
+- **Infraestructure** depende de **Domain** (interfaces, `IAppointment`).
 - **Application** depende de **Domain** (services) e, na prática, pode usar utilitários da infra na borda (ex.: erros traduzidos).
 - **Configuration** depende de tudo o que precisa para **montar** o grafo de objetos.
 
