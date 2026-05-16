@@ -1,7 +1,6 @@
 ---
 description: Camada Domain — interfaces, entities, contratos de repo/service
-globs: src/domain/**/*.ts
-alwaysApply: false
+alwaysApply: true
 ---
 
 # Domain (`src/domain`)

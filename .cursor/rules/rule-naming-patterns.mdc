@@ -1,7 +1,6 @@
 ---
 description: Padrões de nome — interfaces I*, modelos Mongo IM*, enums E* com strings estáveis KEY = 'KEY'
-globs: src/**/*.ts
-alwaysApply: false
+alwaysApply: true
 ---
 
 # Padrões de tipos e nome (`src/`)

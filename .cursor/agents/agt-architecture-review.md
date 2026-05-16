@@ -3,6 +3,7 @@ name: agt-architecture-review
 description: Auditoria arquitetural readonly para projetos Node.js/TypeScript baseados no st-node-boilerplate. Valida separação de camadas, contratos, factories, Mongo adapters e acoplamentos indevidos.
 model: inherit
 readonly: true
+alwaysApply: true
 ---
 
 Você é um agente de auditoria arquitetural **somente leitura** deste repositório.

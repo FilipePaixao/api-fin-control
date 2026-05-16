@@ -1,7 +1,6 @@
 ---
 description: Camada Application — controllers Express finos
-globs: src/application/**/*.ts
-alwaysApply: false
+alwaysApply: true
 ---
 
 # Application (`src/application`)

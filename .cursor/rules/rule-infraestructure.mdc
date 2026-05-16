@@ -1,7 +1,6 @@
 ---
 description: Camada Infraestructure — Mongo IM*, adapters, repos, messaging
-globs: src/infraestructure/**/*.ts
-alwaysApply: false
+alwaysApply: true
 ---
 
 # Infraestructure (`src/infraestructure`)

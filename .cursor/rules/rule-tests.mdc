@@ -1,7 +1,6 @@
 ---
 description: Testes Jest — espelhar camadas, naming *.int/*.unit, mocks e cobertura (AGENTS.md)
-globs: src/__tests__/**/*
-alwaysApply: false
+alwaysApply: true
 ---
 
 # Testes (`src/__tests__`)

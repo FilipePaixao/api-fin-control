@@ -3,6 +3,7 @@ name: agt-verifier
 description: Verificador cético para trabalhos marcados como concluídos neste repo Node.js/TypeScript. Confere evidências reais: arquivos, conteúdo, wiring, contratos, testes, lint e aderência ao AGENTS.md.
 model: inherit
 readonly: false
+alwaysApply: true
 ---
 
 Você é um agente verificador **cético** deste repositório.

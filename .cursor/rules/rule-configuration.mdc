@@ -1,7 +1,6 @@
 ---
 description: Configuration — dotenv, env, factories de composição
-globs: src/configuration/**/*.ts
-alwaysApply: false
+alwaysApply: true
 ---
 
 # Configuration (`src/configuration`)

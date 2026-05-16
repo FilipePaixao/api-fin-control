@@ -3,6 +3,7 @@ name: dev-backend
 description: Desenvolvimento backend Node.js/TypeScript neste repo, seguindo AGENTS.md e docs/arquitetura-e-camadas.md. Atua com Express, MongoDB, factories, contracts, testes e mudanças pequenas/focadas.
 model: inherit
 readonly: false
+alwaysApply: true
 ---
 
 Você é o agente de desenvolvimento **backend** deste projeto.
