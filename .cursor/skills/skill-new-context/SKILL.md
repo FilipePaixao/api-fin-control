@@ -33,6 +33,19 @@ Lê [AGENTS.md](../../../AGENTS.md) (secções 1–3 e 5–6) e [docs/arquitetur
 
 6. **Testes** — `src/__tests__/integration/` e `unit/` espelhando o contexto `user` como referência
 
+## Skills relacionadas
+
+Aprofundar fluxos parciais sem repetir este guia:
+
+| Skill | Quando usar |
+|-------|-------------|
+| [skill-add-http-endpoint](../skill-add-http-endpoint/SKILL.md) | Nova rota HTTP num contexto já existente |
+| [skill-openapi-contract](../skill-openapi-contract/SKILL.md) | Sincronizar `service.yaml` com rotas e schemas |
+| [skill-domain-errors](../skill-domain-errors/SKILL.md) | `EErrorCode`, `IThrowedError`, `ErrorCatalog`, `handleTranslatedError` |
+| [skill-tests-layered](../skill-tests-layered/SKILL.md) | Testes de integração/unit por camada |
+| [skill-mongo-persistence](../skill-mongo-persistence/SKILL.md) | `IM*`, adapter, repositórios Read/Write |
+| [skill-kafka-messaging](../skill-kafka-messaging/SKILL.md) | Producer/consumer Kafka |
+
 ## Checklist final
 
 - [ ] Domain sem imports de `infraestructure` ou `mongoose`

@@ -7,7 +7,9 @@ alwaysApply: true
 
 - Interfaces de domínio: prefixo **`I`** (ex.: `IUser`, `IUserService`).
 - Contratos: `*.repository.read.ts` / `*.repository.write.ts` com `I*RepositoryRead` / `I*RepositoryWrite`.
-- Entities: validação no construtor; ficheiro `<contexto>.entity.ts` em `entity/`.
-- **Proibido:** importar `src/infraestructure`, `mongoose`, modelos `IM*`, producers Kafka concretos.
+- Entities (`*ServiceEntity`): **invariantes locais** do objeto (campos, formato) no construtor; ficheiro `<contexto>.entity.ts` em `entity/`. Não consultar repositório nem validar unicidade.
+- **Service** (`*.service.ts`): **único** lugar para orquestração e regras de negócio (unicidade, 404/409, fluxos, idempotência). Usar entity + contratos `I*RepositoryRead` / `I*RepositoryWrite`.
+- **Proibido no service:** importar `src/infraestructure`, `mongoose`, `*Model`, modelos `IM*`, producers Kafka concretos.
 - Serviços dependem só de interfaces de repositório e de tipos de domínio.
+- Detalhe e exemplos ❌/✅: [rule-business-rules-layers.mdc](rule-business-rules-layers.mdc).
 - Messaging: apenas **interfaces** em `domain/<contexto>/messaging/<evento>/` (ex. `producer.interface.kafka.ts`).

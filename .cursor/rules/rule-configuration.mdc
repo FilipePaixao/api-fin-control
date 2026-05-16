@@ -6,5 +6,6 @@ alwaysApply: true
 # Configuration (`src/configuration`)
 
 - **Factories** em `factory/`: `*.controller.factory.ts`, `*.service.factory.ts`, messaging em `factory/messaging/` quando existir.
-- Responsabilidade: **montar** o grafo (controllers ← services ← repos concretos / producers); não colocar regras de negócio aqui.
+- Responsabilidade: **montar** o grafo (controllers ← services ← repos concretos / producers); não colocar regras de negócio aqui (nem workarounds de regra na factory).
+- Regras de produto ficam no **service** — ver [rule-business-rules-layers.mdc](rule-business-rules-layers.mdc).
 - Env: `dotenv.ts`, `env-constants/` — constantes nomeadas, sem espalhar `process.env` pelo domain.

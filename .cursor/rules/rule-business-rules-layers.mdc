@@ -1,0 +1,132 @@
+---
+description: Onde ficam regras de negócio — Service obrigatório, Repository e Controller proibidos
+alwaysApply: true
+---
+
+# Regras de negócio por camada
+
+## Princípio
+
+Toda **regra de negócio** (decisões de produto, conflitos, existência, fluxos, permissões de domínio, transições de estado) fica **obrigatoriamente** em `src/domain/<contexto>/service/*.service.ts`.
+
+**Repository** (`src/infraestructure/repository/`) e **Controller** (`src/application/controllers/`) **não** implementam regras de negócio.
+
+Fonte complementar: [docs/arquitetura-e-camadas.md](docs/arquitetura-e-camadas.md) (secções 3–5) e [AGENTS.md](AGENTS.md) (secção 7).
+
+---
+
+## Onde fica o quê
+
+| Responsabilidade | Camada | Referência no projeto |
+|------------------|--------|------------------------|
+| Invariantes de um agregado (campos, formato) | **Entity** (`*ServiceEntity`) | `validateUser` em `src/domain/user/entity/user.entity.ts` |
+| Unicidade, “existe?”, 404/409, orquestração, idempotência | **Service** | `createUser`, `getUserById` em `src/domain/user/service/user.service.ts` |
+| CRUD, query, adapter `IM*` ↔ `I*`, erro de DB | **Repository** | `src/infraestructure/repository/user/user.repository.read.ts` |
+| HTTP: status, JSON, tradução de erros | **Controller** | `src/application/controllers/user.controller.ts` |
+
+### Entity vs Service
+
+- **Entity**: invariantes **locais** do objeto (nome obrigatório, email válido). Não consulta repositório nem decide conflitos entre registos.
+- **Service**: regras que **cruzam persistência** ou vários passos (email único, “recurso não encontrado”, “pode apagar?”, workflows). **Não** mover unicidade para a Entity.
+
+---
+
+## Repository — proibido
+
+- Lançar `404` / `409` ou `EErrorCode.RESOURCE_*` por “não achou” ou “já existe”.
+- Validar unicidade, estado de negócio, elegibilidade ou transições de status.
+- Instanciar `*ServiceEntity` ou decidir se a operação de produto é permitida.
+- Qualquer `if` cujo propósito seja **produto**, não **acesso a dados**.
+
+## Repository — permitido
+
+- `Model.findOne` / `create` / `update` / `delete`.
+- `dbToInternal` / `internalToDb` (adapters puros).
+- `try/catch` → `DATABASE_ERROR` + log (padrão em `user.repository.*.ts`).
+- Retornar `null` quando o documento não existir (deixar o **service** decidir o erro de negócio).
+
+---
+
+## Exemplos (contexto `user`)
+
+### 404 — não no Repository
+
+```ts
+// ❌ src/infraestructure/repository/user/user.repository.read.ts
+async findUserById(id: string): Promise<IUser> {
+  const doc = await UserModel.findOne({ id });
+  if (!doc) throw { status: 404, errorCode: EErrorCode.RESOURCE_NOT_FOUND };
+  return dbToInternal(doc);
+}
+```
+
+```ts
+// ✅ Repository: Promise<IUser | null>
+const doc = await UserModel.findOne({ id });
+return doc ? dbToInternal(doc) : null;
+
+// ✅ Service (src/domain/user/service/user.service.ts)
+const user = await this.userRepositoryRead.findUserById(id);
+if (!user) {
+  throw { status: 404, errorCode: EErrorCode.RESOURCE_NOT_FOUND, message: 'User not found' } as IThrowedError;
+}
+return user;
+```
+
+### Conflito / unicidade — só no Service
+
+```ts
+// ❌ Repository
+async createUser(data: IUser): Promise<IUser> {
+  const exists = await UserModel.findOne({ email: data.email });
+  if (exists) throw { status: 409, errorCode: EErrorCode.RESOURCE_CONFLICT };
+  return dbToInternal(await UserModel.create(internalToDb(data)));
+}
+```
+
+```ts
+// ✅ Service — createUser
+const existingUser = await this.userRepositoryRead.findUserByEmail(params.email);
+if (existingUser) {
+  throw { status: 409, errorCode: EErrorCode.RESOURCE_CONFLICT, ... } as IThrowedError;
+}
+const userEntity = new UserServiceEntity(params);
+return await this.userRepositoryWrite.createUser(userEntity);
+```
+
+### Controller — delegar ao Service
+
+```ts
+// ❌ src/application/controllers/user.controller.ts
+const existing = await UserModel.findOne({ email: req.body.email });
+if (existing) return res.status(409).json({ message: 'Conflict' });
+```
+
+```ts
+// ✅ Controller
+const newUser = await this.userService.createUser(req.body);
+res.status(201).json(newUser);
+// erros: handleTranslatedError(error, ErrorCatalog, res)
+```
+
+### Service — não acoplar ao Mongo
+
+```ts
+// ❌ src/domain/user/service/user.service.ts
+import { UserModel } from '../../infraestructure/db/mongo/models/user.model';
+const doc = await UserModel.findOne({ email });
+```
+
+```ts
+// ✅ Service usa só contratos I*RepositoryRead / I*RepositoryWrite
+const user = await this.userRepositoryRead.findUserByEmail(email);
+```
+
+---
+
+## Checklist rápido ao gerar código
+
+- [ ] Conflito, 404 de negócio, workflows → **Service**
+- [ ] Formato/campos obrigatórios do objeto → **Entity**
+- [ ] Query + mapeamento + `null` + erro de DB → **Repository**
+- [ ] Status HTTP e corpo da resposta → **Controller** (sem `UserModel`)

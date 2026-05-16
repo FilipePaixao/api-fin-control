@@ -7,7 +7,10 @@ alwaysApply: true
 
 - Modelos Mongo: interface **`IM*`** estende `I*` de domínio + `_id`, `updatedAt`, etc. (ver AGENTS.md).
 - Schema em `db/mongo/schema/`, model em `db/mongo/models/`, interface `IM*` em `db/mongo/interfaces/`.
-- Repositórios concretos implementam contratos do domain; usam **adapters** puros:
+- Repositórios concretos: **camada fina de persistência** — implementam contratos do domain; usam **adapters** puros:
   - `dbToInternal(IM*) → I*`
   - `internalToDb(I*)` sem efeitos colaterais
+- **Proibido no repository:** regras de negócio (404/409, unicidade, transições de estado, instanciar `*ServiceEntity`). Retornar `null` se não achar; o **service** lança `RESOURCE_NOT_FOUND` / `RESOURCE_CONFLICT`.
+- **Permitido:** CRUD/query, mapeamento, `try/catch` → `DATABASE_ERROR` + log.
+- Exemplo ❌: `if (!doc) throw { errorCode: EErrorCode.RESOURCE_NOT_FOUND }` no repo — ver [rule-business-rules-layers.mdc](rule-business-rules-layers.mdc).
 - Kafka: implementações em `messaging/<evento>/`; contratos ficam no **domain**.

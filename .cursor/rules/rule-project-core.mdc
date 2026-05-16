@@ -12,3 +12,4 @@ alwaysApply: true
 - Composição e DI em `src/configuration/factory/`.
 - Testes em `src/__tests__/`; cobertura alvo ≥ 80% (`yarn test:coverage` em AGENTS.md).
 - Endpoints: ao mudar rotas/contratos, atualizar [src/contracts/service.yaml](src/contracts/service.yaml).
+- **Regras de negócio** ficam **obrigatoriamente** no **Service** (`src/domain/<contexto>/service/`); nunca no Repository nem no Controller. Ver [rule-business-rules-layers.mdc](rule-business-rules-layers.mdc).

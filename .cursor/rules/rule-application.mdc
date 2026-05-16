@@ -7,5 +7,7 @@ alwaysApply: true
 
 - Controllers **finos**: extrair `params`/`body`/`query`, chamar o **service**, definir status e JSON.
 - Implementar `IController` do domain quando aplicável; rotas no router do controller.
-- **Evitar:** regras de negócio pesadas, validação de unicidade com modelo Mongo, instanciar repositórios à mão (usar **factories** em configuration).
+- **Proibido:** regras de negócio (unicidade, conflitos, “existe?”), acesso a `*Model` / Mongoose, instanciar repositórios à mão — delegar sempre ao **service** (ex.: `this.userService.createUser(...)`).
+- **Evitar:** validação de produto no controller; usar **factories** em configuration para DI.
+- Exemplos ❌/✅: [rule-business-rules-layers.mdc](rule-business-rules-layers.mdc).
 - Erros HTTP: padrão do projeto (ex. `handleTranslatedError` + catálogo) quando existir.
