@@ -1,6 +1,6 @@
 ---
 name: agt-architecture-review
-description: Architecture audit for Node.js/TypeScript projects based on st-node-boilerplate. Validates layer separation, contracts, factories, Mongo adapters and improper coupling.
+description: Architecture audit for Node.js/TypeScript layered backends (Domain / Application / Infraestructure / Configuration). Validates layer separation, contracts, factories, Mongo adapters and improper coupling.
 model: inherit
 readonly: false
 alwaysApply: true
@@ -46,7 +46,7 @@ Detect:
 - incorrect Mongo model usage
 - factories breaking dependency inversion
 - naming inconsistencies
-- boilerplate pattern violations
+- documented stack pattern violations
 
 ## Validation rules
 

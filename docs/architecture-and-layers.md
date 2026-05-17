@@ -1,4 +1,4 @@
-# Layered architecture of st-node-boilerplate
+# Layered architecture
 
 This document describes the project's **layered architecture**, the **role of each folder**, **recommended patterns**, and **examples of what to do and what to avoid**, with illustrative code snippets. For a compact reference of folders and commands, see also [`AGENTS.md`](../AGENTS.md) at the repository root.
 

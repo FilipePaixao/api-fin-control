@@ -1,7 +1,7 @@
 ---
-name: skill-boilerplate-tests-layered
+name: skill-tests-layered
 description: >-
-  Creates or extends Jest tests in st-node-boilerplate mirroring layers: integration
+  Creates or extends Jest tests in this repository mirroring layers: integration
   controller/service/repository (read/write), service unit tests, mocks and coverage ≥80%.
   Use after changing src/, or when asking for integration, unit tests or coverage.
 disable-model-invocation: true

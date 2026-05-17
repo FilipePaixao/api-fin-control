@@ -1,7 +1,7 @@
 ---
-name: skill-boilerplate-mongo-persistence
+name: skill-mongo-persistence
 description: >-
-  Extends Mongo persistence in st-node-boilerplate: IM*, schema, model, adapter dbToInternal/
+  Extends Mongo persistence in this repository: IM*, schema, model, adapter dbToInternal/
   internalToDb, Read/Write repositories (CQRS). Use for new field, repo method or schema
   without creating a full context.
 disable-model-invocation: true

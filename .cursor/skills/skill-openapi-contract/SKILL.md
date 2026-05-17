@@ -1,7 +1,7 @@
 ---
-name: skill-boilerplate-openapi-contract
+name: skill-openapi-contract
 description: >-
-  Syncs src/contracts/service.yaml with Express routes and payloads in st-node-boilerplate.
+  Syncs src/contracts/service.yaml with Express routes and payloads in this repository.
   Use when changing path, HTTP method, request/response, OpenAPI schemas or documenting
   API error codes (404, 409, 500, auth).
 disable-model-invocation: true

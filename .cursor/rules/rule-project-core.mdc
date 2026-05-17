@@ -1,9 +1,9 @@
 ---
-description: st-node-boilerplate core — layers, folder spelling, and AGENTS.md
+description: Project core — layered backend, folder spelling, and AGENTS.md
 alwaysApply: true
 ---
 
-# st-node-boilerplate — core
+# Project core — layered backend
 
 - Source of truth: [AGENTS.md](AGENTS.md) and [docs/architecture-and-layers.md](docs/architecture-and-layers.md).
 - Fixed folders: **`infraestructure`** (with "e"), **`configuration`** (singular) — do not rename to "infrastructure" / "configurations".

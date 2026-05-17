@@ -1,7 +1,7 @@
 ---
-name: skill-boilerplate-add-http-endpoint
+name: skill-add-http-endpoint
 description: >-
-  Adds an HTTP endpoint in an existing st-node-boilerplate context: service method,
+  Adds an HTTP endpoint in an existing context: service method,
   thin controller route, factory if needed. Use when requesting a new route, new REST method,
   or HTTP operation without creating a new context/module (e.g. GET /users/by-email).
 disable-model-invocation: true

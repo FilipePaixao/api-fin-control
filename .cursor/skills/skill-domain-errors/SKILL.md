@@ -1,7 +1,7 @@
 ---
-name: skill-boilerplate-domain-errors
+name: skill-domain-errors
 description: >-
-  Standardizes translated HTTP errors in st-node-boilerplate: EErrorCode, IThrowedError in service,
+  Standardizes translated HTTP errors in this repository: EErrorCode, IThrowedError in service,
   ErrorCatalog i18n, handleTranslatedError in controller, DATABASE_ERROR in repository.
   Use when adding error code, 404/409/500 or pt-BR/en/es API messages.
 disable-model-invocation: true

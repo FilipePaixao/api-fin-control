@@ -1,13 +1,13 @@
 ---
-name: skill-boilerplate-kafka-messaging
+name: skill-kafka-messaging
 description: >-
-  Checklist to add Kafka producer/consumer in st-node-boilerplate: contract in domain,
+  Checklist to add Kafka producer/consumer in this repository: contract in domain,
   implementation in infraestructure, factory injection and service call after persistence.
   Use when the user asks for Kafka event, async message or messaging integration.
 disable-model-invocation: true
 ---
 
-# Skill: Kafka (messaging) in st-node-boilerplate
+# Skill: Kafka (messaging)
 
 Follow the **Messaging (Kafka)** section of [AGENTS.md](../../../AGENTS.md).
 

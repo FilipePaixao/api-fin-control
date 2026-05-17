@@ -1,13 +1,13 @@
 ---
-name: skill-boilerplate-new-context
+name: skill-new-context
 description: >-
-  Step-by-step guide to add a new context (bounded context) to st-node-boilerplate:
+  Step-by-step guide to add a new context (bounded context) to this repository:
   domain entity/repos/service, infra Mongo+adapter+repos, controller, factories and OpenAPI.
   Use when the user asks for a new resource, new module or scaffold similar to `user`.
 disable-model-invocation: true
 ---
 
-# Skill: new context in st-node-boilerplate
+# Skill: new context
 
 Read [AGENTS.md](../../../AGENTS.md) (sections 1–3 and 5–6) and [docs/architecture-and-layers.md](../../../docs/architecture-and-layers.md) before generating files.
 
