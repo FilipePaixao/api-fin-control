@@ -1,15 +1,15 @@
 ---
-description: Núcleo do st-node-boilerplate — camadas, ortografia de pastas e AGENTS.md
+description: st-node-boilerplate core — layers, folder spelling, and AGENTS.md
 alwaysApply: true
 ---
 
-# st-node-boilerplate — núcleo
+# st-node-boilerplate — core
 
-- Fonte de verdade: [AGENTS.md](AGENTS.md) e [docs/arquitetura-e-camadas.md](docs/arquitetura-e-camadas.md).
-- Pastas fixas: **`infraestructure`** (com “e”), **`configuration`** (singular) — não renomear para “infrastructure” / “configurations”.
-- **Domain** não importa **Infraestructure** (sem Mongoose, `IM*`, Kafka concreto no domain).
-- Contratos de repositório no domain (`I*RepositoryRead` / `I*RepositoryWrite`); implementações em `src/infraestructure/repository/<contexto>/`.
-- Composição e DI em `src/configuration/factory/`.
-- Testes em `src/__tests__/`; cobertura alvo ≥ 80% (`yarn test:coverage` em AGENTS.md).
-- Endpoints: ao mudar rotas/contratos, atualizar [src/contracts/service.yaml](src/contracts/service.yaml).
-- **Regras de negócio** ficam **obrigatoriamente** no **Service** (`src/domain/<contexto>/service/`); nunca no Repository nem no Controller. Ver [rule-business-rules-layers.mdc](rule-business-rules-layers.mdc).
+- Source of truth: [AGENTS.md](AGENTS.md) and [docs/architecture-and-layers.md](docs/architecture-and-layers.md).
+- Fixed folders: **`infraestructure`** (with "e"), **`configuration`** (singular) — do not rename to "infrastructure" / "configurations".
+- **Domain** must not import **Infraestructure** (no Mongoose, `IM*`, concrete Kafka in domain).
+- Repository contracts in domain (`I*RepositoryRead` / `I*RepositoryWrite`); implementations in `src/infraestructure/repository/<context>/`.
+- Composition and DI in `src/configuration/factory/`.
+- Tests in `src/__tests__/`; coverage target ≥ 80% (`yarn test:coverage` in AGENTS.md).
+- Endpoints: when changing routes/contracts, update [src/contracts/service.yaml](src/contracts/service.yaml).
+- **Business rules** belong **mandatorily** in **Service** (`src/domain/<context>/service/`); never in Repository or Controller. See [rule-business-rules-layers.mdc](rule-business-rules-layers.mdc).

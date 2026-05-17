@@ -1,13 +1,13 @@
 ---
-description: Camada Application — controllers Express finos
+description: Application layer — thin Express controllers
 alwaysApply: true
 ---
 
 # Application (`src/application`)
 
-- Controllers **finos**: extrair `params`/`body`/`query`, chamar o **service**, definir status e JSON.
-- Implementar `IController` do domain quando aplicável; rotas no router do controller.
-- **Proibido:** regras de negócio (unicidade, conflitos, “existe?”), acesso a `*Model` / Mongoose, instanciar repositórios à mão — delegar sempre ao **service** (ex.: `this.userService.createUser(...)`).
-- **Evitar:** validação de produto no controller; usar **factories** em configuration para DI.
-- Exemplos ❌/✅: [rule-business-rules-layers.mdc](rule-business-rules-layers.mdc).
-- Erros HTTP: padrão do projeto (ex. `handleTranslatedError` + catálogo) quando existir.
+- **Thin** controllers: extract `params`/`body`/`query`, call **service**, set status and JSON.
+- Implement domain `IController` when applicable; routes on the controller router.
+- **Forbidden:** business rules (uniqueness, conflicts, "exists?"), access to `*Model` / Mongoose, manually instantiating repositories — always delegate to **service** (e.g. `this.userService.createUser(...)`).
+- **Avoid:** product validation in the controller; use **factories** in configuration for DI.
+- ❌/✅ examples: [rule-business-rules-layers.mdc](rule-business-rules-layers.mdc).
+- HTTP errors: project pattern (e.g. `handleTranslatedError` + catalog) when available.

@@ -1,61 +1,61 @@
 ---
 name: skill-boilerplate-add-http-endpoint
 description: >-
-  Adiciona um endpoint HTTP num contexto já existente do st-node-boilerplate: método no service,
-  rota no controller fino, factory se necessário. Use quando pedir nova rota, novo método REST
-  ou operação HTTP sem criar contexto/módulo novo (ex. GET /users/by-email).
+  Adds an HTTP endpoint in an existing st-node-boilerplate context: service method,
+  thin controller route, factory if needed. Use when requesting a new route, new REST method,
+  or HTTP operation without creating a new context/module (e.g. GET /users/by-email).
 disable-model-invocation: true
 ---
 
-# Skill: novo endpoint HTTP (contexto existente)
+# Skill: new HTTP endpoint (existing context)
 
-Lê [docs/arquitetura-e-camadas.md](../../../docs/arquitetura-e-camadas.md) (§4 Application, §10) e use o contexto `user` como referência.
+Read [docs/architecture-and-layers.md](../../../docs/architecture-and-layers.md) (§4 Application, §10) and use the `user` context as reference.
 
-**Não usar** para contexto novo — ver [skill-new-context](../skill-new-context/SKILL.md).
+**Do not use** for a new context — see [skill-new-context](../skill-new-context/SKILL.md).
 
-## Ordem de implementação
+## Implementation order
 
 1. **Domain — service**
-   - Declarar método em `src/domain/<contexto>/interfaces/<contexto>.service.interface.ts`.
-   - Implementar em `src/domain/<contexto>/service/<contexto>.service.ts`: regras de negócio, `*ServiceEntity`, `IThrowedError` + `EErrorCode` (ver [skill-domain-errors](../skill-domain-errors/SKILL.md)).
-   - Referência: [`user.service.ts`](../../../src/domain/user/service/user.service.ts).
+   - Declare method in `src/domain/<context>/interfaces/<context>.service.interface.ts`.
+   - Implement in `src/domain/<context>/service/<context>.service.ts`: business rules, `*ServiceEntity`, `IThrowedError` + `EErrorCode` (see [skill-domain-errors](../skill-domain-errors/SKILL.md)).
+   - Reference: [`user.service.ts`](../../../src/domain/user/service/user.service.ts).
 
-2. **Repositório (se precisar de dados novos)**
-   - Estender `I*RepositoryRead` / `I*RepositoryWrite` no domain.
-   - Implementar na infra — ver [skill-mongo-persistence](../skill-mongo-persistence/SKILL.md).
+2. **Repository (if new data is needed)**
+   - Extend `I*RepositoryRead` / `I*RepositoryWrite` in the domain.
+   - Implement in infra — see [skill-mongo-persistence](../skill-mongo-persistence/SKILL.md).
 
 3. **Application — controller**
-   - Registar rota em `initRoutes()` de `src/application/controllers/<contexto>.controller.ts`.
-   - Handler fino: extrair `params` / `body` / `query` → chamar service → `res.status(...).json(...)`.
-   - `try/catch` com `handleTranslatedError(error, ErrorCatalog, res)`.
-   - Referência: [`user.controller.ts`](../../../src/application/controllers/user.controller.ts).
+   - Register route in `initRoutes()` of `src/application/controllers/<context>.controller.ts`.
+   - Thin handler: extract `params` / `body` / `query` → call service → `res.status(...).json(...)`.
+   - `try/catch` with `handleTranslatedError(error, ErrorCatalog, res)`.
+   - Reference: [`user.controller.ts`](../../../src/application/controllers/user.controller.ts).
 
 4. **Configuration — factory**
-   - Alterar `src/configuration/factory/<contexto>.service.factory.ts` **só** se o service ganhar novas dependências no construtor.
+   - Change `src/configuration/factory/<context>.service.factory.ts` **only** if the service gains new constructor dependencies.
 
-5. **Contrato e testes**
+5. **Contract and tests**
    - OpenAPI: [skill-openapi-contract](../skill-openapi-contract/SKILL.md).
-   - Testes: [skill-tests-layered](../skill-tests-layered/SKILL.md).
+   - Tests: [skill-tests-layered](../skill-tests-layered/SKILL.md).
 
-## Status HTTP (orientação)
+## HTTP status (guidance)
 
-| Situação | Status |
+| Situation | Status |
 |----------|--------|
-| Leitura com sucesso | 200 |
-| Criação | 201 |
-| Conflito de negócio (ex. email duplicado) | 409 (service) |
-| Recurso inexistente | 404 (service) |
-| Erro de base de dados | 500 (repositório) |
+| Successful read | 200 |
+| Creation | 201 |
+| Business conflict (e.g. duplicate email) | 409 (service) |
+| Resource not found | 404 (service) |
+| Database error | 500 (repository) |
 
-## Anti-padrões
+## Anti-patterns
 
-- Lógica de unicidade, validação de negócio ou queries Mongo no controller.
-- Instanciar `*RepositoryRead` / `*RepositoryWrite` no controller (usar factory).
-- Traduzir erros manualmente no controller (usar `handleTranslatedError`).
+- Uniqueness logic, business validation, or Mongo queries in the controller.
+- Instantiating `*RepositoryRead` / `*RepositoryWrite` in the controller (use factory).
+- Manually translating errors in the controller (use `handleTranslatedError`).
 
 ## Checklist
 
-- [ ] Service contém regras; controller só orquestra HTTP
-- [ ] `service.yaml` atualizado
-- [ ] Testes de controller e service (mínimo caminho feliz + erro principal)
-- [ ] `yarn test` e `yarn lint` passam
+- [ ] Service contains rules; controller only orchestrates HTTP
+- [ ] `service.yaml` updated
+- [ ] Controller and service tests (at least happy path + main error)
+- [ ] `yarn test` and `yarn lint` pass

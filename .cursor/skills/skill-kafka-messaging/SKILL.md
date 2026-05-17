@@ -1,31 +1,31 @@
 ---
 name: skill-boilerplate-kafka-messaging
 description: >-
-  Checklist para adicionar producer/consumer Kafka no st-node-boilerplate: contrato no domain,
-  implementação na infraestructure, injeção na factory e chamada no service após persistência.
-  Use quando o utilizador pedir evento Kafka, mensagem assíncrona ou integração com messaging.
+  Checklist to add Kafka producer/consumer in st-node-boilerplate: contract in domain,
+  implementation in infraestructure, factory injection and service call after persistence.
+  Use when the user asks for Kafka event, async message or messaging integration.
 disable-model-invocation: true
 ---
 
-# Skill: Kafka (messaging) no st-node-boilerplate
+# Skill: Kafka (messaging) in st-node-boilerplate
 
-Segue a secção **Messaging (Kafka)** de [AGENTS.md](../../../AGENTS.md).
+Follow the **Messaging (Kafka)** section of [AGENTS.md](../../../AGENTS.md).
 
-## Passos
+## Steps
 
-1. **Domain** — `src/domain/<contexto>/messaging/<evento>/`
-   - Interface do producer, ex.: `producer.interface.kafka.ts` (`I*` adequado ao evento)
+1. **Domain** — `src/domain/<context>/messaging/<event>/`
+   - Producer interface, e.g. `producer.interface.kafka.ts` (`I*` appropriate to the event)
 
-2. **Infraestructure** — `src/infraestructure/messaging/<evento>/`
-   - `producer.kafka.ts` e/ou `consumer.kafka.ts` implementando o contrato
+2. **Infraestructure** — `src/infraestructure/messaging/<event>/`
+   - `producer.kafka.ts` and/or `consumer.kafka.ts` implementing the contract
 
-3. **Service** — injetar a interface do producer; chamar **após** operação de repositório bem-sucedida (quando fizer sentido ao negócio)
+3. **Service** — inject producer interface; call **after** successful repository operation (when it makes business sense)
 
-4. **Configuration** — registar producer (e consumer/worker se existir) na factory correspondente, ex. `src/configuration/factory/messaging/`
+4. **Configuration** — register producer (and consumer/worker if any) in the corresponding factory, e.g. `src/configuration/factory/messaging/`
 
-5. **Testes** — mocks da interface do producer nos testes de service quando aplicável
+5. **Tests** — mock producer interface in service tests when applicable
 
-## Regras
+## Rules
 
-- Contrato **sempre** no domain; implementação **sempre** na infraestructure.
-- Não importar Kafka concreto no domain.
+- Contract **always** in domain; implementation **always** in infraestructure.
+- Do not import concrete Kafka in the domain.

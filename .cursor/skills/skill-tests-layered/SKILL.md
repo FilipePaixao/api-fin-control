@@ -1,74 +1,74 @@
 ---
 name: skill-boilerplate-tests-layered
 description: >-
-  Cria ou estende testes Jest no st-node-boilerplate espelhando camadas: integração
-  controller/service/repository (read/write), unitário de service, mocks e cobertura ≥80%.
-  Use após alterar src/, ao pedir testes de integração, unitários ou cobertura.
+  Creates or extends Jest tests in st-node-boilerplate mirroring layers: integration
+  controller/service/repository (read/write), service unit tests, mocks and coverage ≥80%.
+  Use after changing src/, or when asking for integration, unit tests or coverage.
 disable-model-invocation: true
 ---
 
-# Skill: testes em camadas (`src/__tests__`)
+# Skill: layered tests (`src/__tests__`)
 
-Lê [docs/arquitetura-e-camadas.md](../../../docs/arquitetura-e-camadas.md) (§8) e [AGENTS.md](../../../AGENTS.md) (§4).
+Read [docs/architecture-and-layers.md](../../../docs/architecture-and-layers.md) (§8) and [AGENTS.md](../../../AGENTS.md) (§4).
 
-## Estrutura de pastas (espelhar `user`)
+## Folder structure (mirror `user`)
 
 ```text
 src/__tests__/
-  __mocks__/<contexto>.mock.ts
-  integration/<contexto>/
+  __mocks__/<context>.mock.ts
+  integration/<context>/
     controller/*.int.test.ts
     service/*.int.test.ts
     repository/read/*.int.test.ts
     repository/write/*.int.test.ts
-  unit/<contexto>/service/*.unit.test.ts   # quando existir padrão no repo
+  unit/<context>/service/*.unit.test.ts   # when repo has the pattern
 ```
 
-## Por camada
+## By layer
 
 ### Controller (HTTP)
 
-- `supertest` contra `app` do setup de integração.
-- Assert `statusCode` e corpo JSON.
-- Opcional: verificar persistência com `*Model` após POST/PUT/DELETE.
-- Referência: [`create-user.int.test.ts`](../../../src/__tests__/integration/user/controller/create-user.int.test.ts).
+- `supertest` against `app` from integration setup.
+- Assert `statusCode` and JSON body.
+- Optional: verify persistence with `*Model` after POST/PUT/DELETE.
+- Reference: [`create-user.int.test.ts`](../../../src/__tests__/integration/user/controller/create-user.int.test.ts).
 
-### Service (negócio)
+### Service (business)
 
-- Instanciar via `*ServiceFactory.create()` — **sem** HTTP.
-- Mock de dados com `validUserMock` ou `UserModel.create` para cenários de conflito.
-- Assert erros com `errorCode` + `ErrorCatalog`.
-- Referência: [`create-user.int.test.ts`](../../../src/__tests__/integration/user/service/create-user.int.test.ts) (service).
+- Instantiate via `*ServiceFactory.create()` — **no** HTTP.
+- Data mock with `validUserMock` or `UserModel.create` for conflict scenarios.
+- Assert errors with `errorCode` + `ErrorCatalog`.
+- Reference: [`create-user.int.test.ts`](../../../src/__tests__/integration/user/service/create-user.int.test.ts) (service).
 
-### Repository (persistência)
+### Repository (persistence)
 
-- Testar implementação concreta Read/Write separadamente.
-- Pastas `repository/read/` e `repository/write/` (CQRS leve).
-- Referência: [`find-user-by-id.int.test.ts`](../../../src/__tests__/integration/user/repository/read/find-user-by-id.int.test.ts).
+- Test concrete Read/Write implementation separately.
+- Folders `repository/read/` and `repository/write/` (light CQRS).
+- Reference: [`find-user-by-id.int.test.ts`](../../../src/__tests__/integration/user/repository/read/find-user-by-id.int.test.ts).
 
-## Convenções
+## Conventions
 
-- Sufixo `*.int.test.ts` para integração.
-- Mocks partilhados em [`__mocks__/user.mock.ts`](../../../src/__tests__/__mocks__/user.mock.ts) (`validUserMock`).
-- Descrições em inglês no `describe`/`it` (padrão do repo).
+- Suffix `*.int.test.ts` for integration.
+- Shared mocks in [`__mocks__/user.mock.ts`](../../../src/__tests__/__mocks__/user.mock.ts) (`validUserMock`).
+- English descriptions in `describe`/`it` (repo pattern).
 
-## Comandos
+## Commands
 
-| Comando | Uso |
+| Command | Use |
 |---------|-----|
-| `yarn test` | Suite completa |
-| `yarn test:coverage` | Cobertura alvo ≥ 80% |
-| `yarn lint` | ESLint após alterações |
+| `yarn test` | Full suite |
+| `yarn test:coverage` | Coverage target ≥ 80% |
+| `yarn lint` | ESLint after changes |
 
 ## Checklist
 
-- [ ] Novo comportamento tem teste na camada onde a lógica vive
-- [ ] Controller: caminho feliz + pelo menos um erro HTTP relevante
-- [ ] Service: conflito / not found quando aplicável
-- [ ] Repository: read e write em ficheiros/pastas corretas
-- [ ] `yarn test` e `yarn test:coverage` passam
+- [ ] New behavior has a test in the layer where the logic lives
+- [ ] Controller: happy path + at least one relevant HTTP error
+- [ ] Service: conflict / not found when applicable
+- [ ] Repository: read and write in correct files/folders
+- [ ] `yarn test` and `yarn test:coverage` pass
 
-## Skills relacionadas
+## Related skills
 
-- Novo endpoint: [skill-add-http-endpoint](../skill-add-http-endpoint/SKILL.md)
-- Erros: [skill-domain-errors](../skill-domain-errors/SKILL.md)
+- New endpoint: [skill-add-http-endpoint](../skill-add-http-endpoint/SKILL.md)
+- Errors: [skill-domain-errors](../skill-domain-errors/SKILL.md)
