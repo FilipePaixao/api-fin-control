@@ -1,14 +1,15 @@
 ---
-description: Camada Domain — interfaces, entities, contratos de repo/service
-globs: src/domain/**/*.ts
-alwaysApply: false
+description: Domain layer — interfaces, entities, repo/service contracts
+alwaysApply: true
 ---
 
 # Domain (`src/domain`)
 
-- Interfaces de domínio: prefixo **`I`** (ex.: `IUser`, `IUserService`).
-- Contratos: `*.repository.read.ts` / `*.repository.write.ts` com `I*RepositoryRead` / `I*RepositoryWrite`.
-- Entities: validação no construtor; ficheiro `<contexto>.entity.ts` em `entity/`.
-- **Proibido:** importar `src/infraestructure`, `mongoose`, modelos `IM*`, producers Kafka concretos.
-- Serviços dependem só de interfaces de repositório e de tipos de domínio.
-- Messaging: apenas **interfaces** em `domain/<contexto>/messaging/<evento>/` (ex. `producer.interface.kafka.ts`).
+- Domain interfaces: prefix **`I`** (e.g. `IUser`, `IUserService`).
+- Contracts: `*.repository.read.ts` / `*.repository.write.ts` with `I*RepositoryRead` / `I*RepositoryWrite`.
+- Entities (`*ServiceEntity`): **local** object invariants (fields, format) in the constructor; file `<context>.entity.ts` in `entity/`. Do not query repository or validate uniqueness.
+- **Service** (`*.service.ts`): **only** place for orchestration and business rules (uniqueness, 404/409, flows, idempotency). Use entity + `I*RepositoryRead` / `I*RepositoryWrite` contracts.
+- **Forbidden in service:** import `src/infraestructure`, `mongoose`, `*Model`, `IM*` models, concrete Kafka producers.
+- Services depend only on repository interfaces and domain types.
+- Detail and ❌/✅ examples: [rule-business-rules-layers.mdc](rule-business-rules-layers.mdc).
+- Messaging: **interfaces** only in `domain/<context>/messaging/<event>/` (e.g. `producer.interface.kafka.ts`).

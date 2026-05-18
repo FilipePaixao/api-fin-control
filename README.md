@@ -2,7 +2,7 @@
 
 Base de projeto para APIs REST em **Node.js**, **TypeScript**, **Express** e **MongoDB** (Mongoose), com validação **OpenAPI**, testes **Jest** (unitários e integração) e organização em **camadas** (domain, application, infraestructure, configuration).
 
-**Documentação de arquitetura (camadas, diagramas Mermaid, padrões e anti-padrões):** [docs/arquitetura-e-camadas.md](docs/arquitetura-e-camadas.md) — também acessível pela entrada na raiz [ARQUITETURA.md](ARQUITETURA.md).
+**Architecture documentation (layers, Mermaid diagrams, patterns and anti-patterns):** [docs/architecture-and-layers.md](docs/architecture-and-layers.md) — also available via the root entry [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ---
 
@@ -83,7 +83,7 @@ O fluxo típico é: **HTTP → Controller (application) → Service (domain) →
 
 Documentação detalhada:
 
-- **[`docs/arquitetura-e-camadas.md`](docs/arquitetura-e-camadas.md)** — camadas, padrões, exemplos do que fazer/evitar e diagramas Mermaid
+- **[`docs/architecture-and-layers.md`](docs/architecture-and-layers.md)** — layers, patterns, do/avoid examples and Mermaid diagrams
 - **[`AGENTS.md`](AGENTS.md)** — convenções de nomes (`I*`, `IM*`), estrutura de pastas e checklist para contribuições
 
 Resumo da árvore `src/`:

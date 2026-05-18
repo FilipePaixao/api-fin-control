@@ -1,14 +1,16 @@
 ---
-description: Camada Infraestructure — Mongo IM*, adapters, repos, messaging
-globs: src/infraestructure/**/*.ts
-alwaysApply: false
+description: Infraestructure layer — Mongo IM*, adapters, repos, messaging
+alwaysApply: true
 ---
 
 # Infraestructure (`src/infraestructure`)
 
-- Modelos Mongo: interface **`IM*`** estende `I*` de domínio + `_id`, `updatedAt`, etc. (ver AGENTS.md).
-- Schema em `db/mongo/schema/`, model em `db/mongo/models/`, interface `IM*` em `db/mongo/interfaces/`.
-- Repositórios concretos implementam contratos do domain; usam **adapters** puros:
+- Mongo models: interface **`IM*`** extends domain `I*` + `_id`, `updatedAt`, etc. (see AGENTS.md).
+- Schema in `db/mongo/schema/`, model in `db/mongo/models/`, `IM*` interface in `db/mongo/interfaces/`.
+- Concrete repositories: **thin persistence layer** — implement domain contracts; use pure **adapters**:
   - `dbToInternal(IM*) → I*`
-  - `internalToDb(I*)` sem efeitos colaterais
-- Kafka: implementações em `messaging/<evento>/`; contratos ficam no **domain**.
+  - `internalToDb(I*)` with no side effects
+- **Forbidden in repository:** business rules (404/409, uniqueness, state transitions, instantiate `*ServiceEntity`). Return `null` if not found; **service** throws `RESOURCE_NOT_FOUND` / `RESOURCE_CONFLICT`.
+- **Allowed:** CRUD/query, mapping, `try/catch` → `DATABASE_ERROR` + log.
+- ❌ example: `if (!doc) throw { errorCode: EErrorCode.RESOURCE_NOT_FOUND }` in repo — see [rule-business-rules-layers.mdc](rule-business-rules-layers.mdc).
+- Kafka: implementations in `messaging/<event>/`; contracts stay in **domain**.

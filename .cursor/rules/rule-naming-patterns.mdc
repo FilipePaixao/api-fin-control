@@ -1,29 +1,28 @@
 ---
-description: Padrões de nome — interfaces I*, modelos Mongo IM*, enums E* com strings estáveis KEY = 'KEY'
-globs: src/**/*.ts
-alwaysApply: false
+description: Naming patterns — I* interfaces, Mongo IM* models, E* enums with stable KEY = 'KEY' strings
+alwaysApply: true
 ---
 
-# Padrões de tipos e nome (`src/`)
+# Type and naming patterns (`src/`)
 
-Fonte de verdade complementar: [AGENTS.md](AGENTS.md) (secção de convenções).
+Supplementary source of truth: [AGENTS.md](AGENTS.md) (conventions section).
 
-## Interfaces de domínio e contratos
+## Domain interfaces and contracts
 
-- Prefixo **`I`** + PascalCase: `IUser`, `IUserService`, `IUserRepositoryRead`.
-- Contratos de repositório: `I*RepositoryRead` / `I*RepositoryWrite` em arquivos `*.repository.read.ts` / `*.repository.write.ts`.
+- Prefix **`I`** + PascalCase: `IUser`, `IUserService`, `IUserRepositoryRead`.
+- Repository contracts: `I*RepositoryRead` / `I*RepositoryWrite` in `*.repository.read.ts` / `*.repository.write.ts` files.
 
-## Modelos de persistência (Mongo)
+## Persistence models (Mongo)
 
-- Prefixo **`IM`** + nome do conceito: `IMUser` (estende domínio com `_id`, timestamps, etc.), alinhado a schemas/models em `src/infraestructure/db/mongo/`.
+- Prefix **`IM`** + concept name: `IMUser` (extends domain with `_id`, timestamps, etc.), aligned with schemas/models in `src/infraestructure/db/mongo/`.
 
-## Enums (valores fixos: status, tipo, código de erro, etc.)
+## Enums (fixed values: status, type, error code, etc.)
 
-- Nome do tipo: prefixo **`E`** + PascalCase: `EUserStatus`, `EErrorCode`.
-- Arquivo sugerido: `E<Nome>.ts`, em pasta `enums/` do contexto quando fizer sentido (ex.: `src/domain/<contexto>/entity/enums/` ou `.../errors/enums/`).
-- **String enum obrigatório** para valores expostos em API, logs, persistência ou comparações estáveis: cada membro repete o mesmo literal string que o identificador do membro.
+- Type name: prefix **`E`** + PascalCase: `EUserStatus`, `EErrorCode`.
+- Suggested file: `E<Name>.ts`, in context `enums/` folder when it makes sense (e.g. `src/domain/<context>/entity/enums/` or `.../errors/enums/`).
+- **String enum required** for values exposed in API, logs, persistence, or stable comparisons: each member repeats the same string literal as the member identifier.
 
-Exemplo (padrão do projeto):
+Example (project pattern):
 
 ```ts
 export enum EUserStatus {
@@ -33,12 +32,12 @@ export enum EUserStatus {
 }
 ```
 
-- Membros em **UPPER_SNAKE_CASE**; valor sempre **`'MESMO_NOME_DO_MEMBRO'`** (ex.: `STATUS_REQUIRES_FIELDS = 'STATUS_REQUIRES_FIELDS'`).
-- Evitar enums numéricos para estados de negócio quando o valor for serializado ou comparado como string.
-- Não usar `const` solto com strings mágicas no domínio quando existir conjunto fechado de valores — preferir `enum E*`.
+- Members in **UPPER_SNAKE_CASE**; value always **`'SAME_NAME_AS_MEMBER'`** (e.g. `STATUS_REQUIRES_FIELDS = 'STATUS_REQUIRES_FIELDS'`).
+- Avoid numeric enums for business states when the value is serialized or compared as a string.
+- Do not use loose `const` with magic strings in the domain when there is a closed set of values — prefer `enum E*`.
 
-## O que evitar
+## What to avoid
 
-- Interface sem prefixo `I` em contratos de domínio.
-- `enum` numérico para códigos/estados que trafegam como string.
-- Membros de enum com valor string diferente do nome do membro (quebra previsibilidade e busca no código), salvo requisito externo documentado.
+- Interface without `I` prefix in domain contracts.
+- Numeric `enum` for codes/states that travel as strings.
+- Enum members with a string value different from the member name (breaks predictability and code search), except documented external requirement.
