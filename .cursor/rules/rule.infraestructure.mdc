@@ -12,5 +12,5 @@ alwaysApply: true
   - `internalToDb(I*)` with no side effects
 - **Forbidden in repository:** business rules (404/409, uniqueness, state transitions, instantiate `*ServiceEntity`). Return `null` if not found; **service** throws `RESOURCE_NOT_FOUND` / `RESOURCE_CONFLICT`.
 - **Allowed:** CRUD/query, mapping, `try/catch` → `DATABASE_ERROR` + log.
-- ❌ example: `if (!doc) throw { errorCode: EErrorCode.RESOURCE_NOT_FOUND }` in repo — see [rule-business-rules-layers.mdc](rule-business-rules-layers.mdc).
-- Kafka: implementations in `messaging/<event>/`; contracts stay in **domain**.
+- ❌ example: `if (!doc) throw { errorCode: EErrorCode.RESOURCE_NOT_FOUND }` in repo — see [rule.business-rules-layers.mdc](rule.business-rules-layers.mdc).
+- Kafka (optional scaffolding — no `messaging/` exists in `src/infraestructure` yet): when added, put implementations in `messaging/<event>/`; contracts stay in **domain**.
