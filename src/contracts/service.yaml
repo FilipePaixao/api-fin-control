@@ -21,9 +21,17 @@ servers:
 tags:
   - name: Users
     description: User management operations
+  - name: Auth
+    description: Authentication and session operations
+  - name: Expenses
+    description: Expense management operations
+  - name: Dashboard
+    description: Authenticated financial dashboard
+  - name: RAG
+    description: Retrieval-augmented financial Q&A
 
 paths:
-  /users:
+  /api/users:
     get:
       tags:
         - Users
@@ -93,7 +101,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
-  /users/{id}:
+  /api/users/{id}:
     get:
       tags:
         - Users
@@ -200,7 +208,481 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /api/auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Register a new user
+      description: Create a user account with hashed password storage.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterUser'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPublicProfile'
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '409':
+          description: Email or document already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Authenticate user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokens'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/refresh:
+    post:
+      tags:
+        - Auth
+      summary: Refresh session tokens
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: New token pair issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokens'
+        '401':
+          description: Invalid, expired or revoked refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/logout:
+    post:
+      tags:
+        - Auth
+      summary: Logout and revoke refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '204':
+          description: Logout successful
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/me:
+    get:
+      tags:
+        - Auth
+      summary: Get authenticated user profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Authenticated user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPublicProfile'
+        '401':
+          description: Missing or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/users/me/salary:
+    put:
+      tags:
+        - Users
+      summary: Update authenticated user salary
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSalary'
+      responses:
+        '200':
+          description: Salary updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Salary'
+        '400':
+          description: Invalid salary payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '401':
+          description: Missing or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+
+  /api/expenses:
+    post:
+      tags:
+        - Expenses
+      summary: Create expense
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewExpense'
+      responses:
+        '201':
+          description: Expense created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expense'
+        '400':
+          description: Invalid payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+    get:
+      tags:
+        - Expenses
+      summary: List expenses
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [HOUSING, FOOD, TRANSPORT, HEALTH, EDUCATION, ENTERTAINMENT, SUBSCRIPTIONS, DEBT, INVESTMENT, OTHER]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [PENDING, PAID, OVERDUE, CANCELED]
+        - name: referenceMonth
+          in: query
+          schema:
+            type: string
+            pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: User expenses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Expense'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+
+  /api/expenses/{id}:
+    get:
+      tags:
+        - Expenses
+      summary: Get expense by id
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Expense found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expense'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '404':
+          description: Expense not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+    put:
+      tags:
+        - Expenses
+      summary: Update expense
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateExpense'
+      responses:
+        '200':
+          description: Expense updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expense'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '404':
+          description: Expense not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+    delete:
+      tags:
+        - Expenses
+      summary: Delete expense
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Expense deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '404':
+          description: Expense not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+
+  /api/expenses/{id}/pay:
+    patch:
+      tags:
+        - Expenses
+      summary: Mark expense as paid
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayExpense'
+      responses:
+        '200':
+          description: Expense marked as paid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expense'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '404':
+          description: Expense not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+
+  /api/dashboard:
+    get:
+      tags:
+        - Dashboard
+      summary: Get financial dashboard summary
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: referenceMonth
+          in: query
+          schema:
+            type: string
+            pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+      responses:
+        '200':
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardSummary'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+
+  /api/rag/ask:
+    post:
+      tags:
+        - RAG
+      summary: Ask a financial question with RAG
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RagQuestion'
+      responses:
+        '200':
+          description: Financial answer generated from user context
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RagAnswer'
+        '400':
+          description: Invalid question
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     AuthMiddlewareError:
       type: object
@@ -352,3 +834,319 @@ components:
           format: date-time
           description: When the operation was completed
           example: '2025-07-15T17:30:00.000Z'
+    Document:
+      type: object
+      required:
+        - type
+        - value
+      properties:
+        type:
+          type: string
+          enum: [CPF, CNPJ]
+        value:
+          type: string
+    RegisterUser:
+      type: object
+      required:
+        - name
+        - email
+        - password
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        document:
+          $ref: '#/components/schemas/Document'
+        age:
+          type: integer
+          minimum: 0
+          maximum: 150
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    RefreshTokenRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+    AuthTokens:
+      type: object
+      required:
+        - accessToken
+        - refreshToken
+        - expiresIn
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+          description: Access token lifetime in seconds
+    UserPublicProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        document:
+          $ref: '#/components/schemas/Document'
+        age:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    Salary:
+      type: object
+      properties:
+        amount:
+          type: number
+        currency:
+          type: string
+          enum: [BRL]
+        paymentDay:
+          type: integer
+          minimum: 1
+          maximum: 31
+        source:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    UpdateSalary:
+      type: object
+      required:
+        - amount
+        - currency
+      properties:
+        amount:
+          type: number
+          minimum: 0.01
+        currency:
+          type: string
+          enum: [BRL]
+        paymentDay:
+          type: integer
+          minimum: 1
+          maximum: 31
+        source:
+          type: string
+    Expense:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        amount:
+          type: number
+        category:
+          type: string
+          enum: [HOUSING, FOOD, TRANSPORT, HEALTH, EDUCATION, ENTERTAINMENT, SUBSCRIPTIONS, DEBT, INVESTMENT, OTHER]
+        paymentMethod:
+          type: string
+          enum: [CREDIT_CARD, DEBIT_CARD, PIX, CASH, BANK_SLIP, BANK_TRANSFER, OTHER]
+        status:
+          type: string
+          enum: [PENDING, PAID, OVERDUE, CANCELED]
+        dueDate:
+          type: string
+          format: date-time
+        paidAt:
+          type: string
+          format: date-time
+        referenceMonth:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    NewExpense:
+      type: object
+      required:
+        - name
+        - amount
+        - category
+        - referenceMonth
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        amount:
+          type: number
+          minimum: 0.01
+        category:
+          type: string
+          enum: [HOUSING, FOOD, TRANSPORT, HEALTH, EDUCATION, ENTERTAINMENT, SUBSCRIPTIONS, DEBT, INVESTMENT, OTHER]
+        paymentMethod:
+          type: string
+          enum: [CREDIT_CARD, DEBIT_CARD, PIX, CASH, BANK_SLIP, BANK_TRANSFER, OTHER]
+        status:
+          type: string
+          enum: [PENDING, PAID, OVERDUE, CANCELED]
+        dueDate:
+          type: string
+          format: date-time
+        referenceMonth:
+          type: string
+          pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+    UpdateExpense:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        amount:
+          type: number
+          minimum: 0.01
+        category:
+          type: string
+          enum: [HOUSING, FOOD, TRANSPORT, HEALTH, EDUCATION, ENTERTAINMENT, SUBSCRIPTIONS, DEBT, INVESTMENT, OTHER]
+        paymentMethod:
+          type: string
+          enum: [CREDIT_CARD, DEBIT_CARD, PIX, CASH, BANK_SLIP, BANK_TRANSFER, OTHER]
+        status:
+          type: string
+          enum: [PENDING, PAID, OVERDUE, CANCELED]
+        dueDate:
+          type: string
+          format: date-time
+        referenceMonth:
+          type: string
+          pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+    PayExpense:
+      type: object
+      properties:
+        paidAt:
+          type: string
+          format: date-time
+        paymentMethod:
+          type: string
+          enum: [CREDIT_CARD, DEBIT_CARD, PIX, CASH, BANK_SLIP, BANK_TRANSFER, OTHER]
+    DashboardByCategory:
+      type: object
+      properties:
+        category:
+          type: string
+          enum: [HOUSING, FOOD, TRANSPORT, HEALTH, EDUCATION, ENTERTAINMENT, SUBSCRIPTIONS, DEBT, INVESTMENT, OTHER]
+        total:
+          type: number
+        paid:
+          type: number
+        pending:
+          type: number
+        overdue:
+          type: number
+    DashboardTopExpense:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        amount:
+          type: number
+        status:
+          type: string
+          enum: [PENDING, PAID, OVERDUE, CANCELED]
+        category:
+          type: string
+          enum: [HOUSING, FOOD, TRANSPORT, HEALTH, EDUCATION, ENTERTAINMENT, SUBSCRIPTIONS, DEBT, INVESTMENT, OTHER]
+        dueDate:
+          type: string
+          format: date-time
+        referenceMonth:
+          type: string
+    DashboardSummary:
+      type: object
+      properties:
+        salary:
+          type: number
+          nullable: true
+        currency:
+          type: string
+          nullable: true
+          enum: [BRL]
+        totalExpenses:
+          type: number
+        totalPaid:
+          type: number
+        totalPending:
+          type: number
+        totalOverdue:
+          type: number
+        availableBalance:
+          type: number
+          nullable: true
+        incomeCommitmentPercent:
+          type: number
+          nullable: true
+        byCategory:
+          type: array
+          items:
+            $ref: '#/components/schemas/DashboardByCategory'
+        topExpenses:
+          type: array
+          items:
+            $ref: '#/components/schemas/DashboardTopExpense'
+    RagQuestion:
+      type: object
+      required:
+        - question
+      properties:
+        question:
+          type: string
+          minLength: 1
+    RagSource:
+      type: object
+      properties:
+        sourceType:
+          type: string
+          enum: [EXPENSE, SALARY, DASHBOARD_SNAPSHOT, OTHER]
+        sourceId:
+          type: string
+        excerpt:
+          type: string
+        score:
+          type: number
+    RagAnswer:
+      type: object
+      properties:
+        answer:
+          type: string
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/RagSource'
