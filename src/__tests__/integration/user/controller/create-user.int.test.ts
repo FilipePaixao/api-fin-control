@@ -8,10 +8,10 @@ const paramsCreate = validUserMock({
   email: 'whitebeard@email.com',
 });
 
-describe('When we try to create a valid user', () => {
-  it('should return success and the created user', async () => {
+describe('When we create a user with a valid payload', () => {
+  it('Should return 201 and the created user', async () => {
     const { body, statusCode } = await supertest(app.app)
-      .post(`/users`)
+      .post('/api/users')
       .send(paramsCreate);
 
     const userInDb = await UserModel.findOne({ id: paramsCreate.id });
@@ -29,5 +29,17 @@ describe('When we try to create a valid user', () => {
       name: paramsCreate.name,
       email: paramsCreate.email,
     });
+  });
+});
+
+describe('When we create a user with a duplicate email', () => {
+  it('Should reject with RESOURCE_CONFLICT', async () => {
+    await UserModel.create(paramsCreate);
+
+    const { statusCode } = await supertest(app.app)
+      .post('/api/users')
+      .send(validUserMock({ email: paramsCreate.email }));
+
+    expect(statusCode).toBe(409);
   });
 });
