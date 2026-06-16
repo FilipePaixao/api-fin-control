@@ -6,8 +6,8 @@ import { validUserMock } from '../../../__mocks__/user.mock';
 
 const userService = UserServiceFactory.create();
 
-describe('When we try to create a user', () => {
-  it('should return the created user when the email does not exist', async () => {
+describe('When we create a user with a valid payload', () => {
+  it('Should return the created user', async () => {
     const user = validUserMock();
 
     const result = await userService.createUser(user);
@@ -19,8 +19,10 @@ describe('When we try to create a user', () => {
     });
     expect(result.createdAt).toBeDefined();
   });
+});
 
-  it('should reject with RESOURCE_CONFLICT when the email already exists', async () => {
+describe('When we create a user with an email that already exists', () => {
+  it('Should reject with RESOURCE_CONFLICT', async () => {
     const user = validUserMock();
     await UserModel.create(user);
 
