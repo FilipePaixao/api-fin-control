@@ -1,0 +1,6 @@
+export enum EEmbeddingSourceType {
+  EXPENSE = 'EXPENSE',
+  SALARY = 'SALARY',
+  DASHBOARD_SNAPSHOT = 'DASHBOARD_SNAPSHOT',
+  OTHER = 'OTHER',
+}
