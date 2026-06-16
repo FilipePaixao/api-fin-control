@@ -43,6 +43,7 @@ export class Server {
       (application: Application, fileDestination: string) => void
     >;
     timeoutMilliseconds?: number;
+    pathRoute?: string;
   }) {
     this.app = express();
     this.port = appInit.port;
@@ -56,7 +57,7 @@ export class Server {
 
     this.middlewares(this.middleWaresToStart);
 
-    this.routes(appInit.controllers || []);
+    this.routes(appInit.controllers || [], appInit.pathRoute || '/');
 
     this.customizers();
   }
