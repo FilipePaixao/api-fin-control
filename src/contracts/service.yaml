@@ -28,7 +28,9 @@ tags:
   - name: Dashboard
     description: Authenticated financial dashboard
   - name: RAG
-    description: Retrieval-augmented financial Q&A
+    description: Retrieval-augmented financial Q&A (legacy)
+  - name: Agent
+    description: Conversational AI assistant with Ollama
 
 paths:
   /api/users:
@@ -677,6 +679,78 @@ paths:
               schema:
                 $ref: '#/components/schemas/TranslatedApiError'
 
+  /api/agent/chat:
+    post:
+      tags:
+        - Agent
+      summary: Chat with the financial AI agent
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentChatRequest'
+      responses:
+        '200':
+          description: Agent reply with optional proposed actions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentChatResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '503':
+          description: Ollama unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+
+  /api/agent/actions/execute:
+    post:
+      tags:
+        - Agent
+      summary: Execute a confirmed agent action
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExecuteAgentActionRequest'
+      responses:
+        '200':
+          description: Action executed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecuteAgentActionResponse'
+        '400':
+          description: Invalid action payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -1098,7 +1172,9 @@ components:
         currency:
           type: string
           nullable: true
-          enum: [BRL]
+          enum:
+            - BRL
+            - null
         totalExpenses:
           type: number
         totalPaid:
@@ -1150,3 +1226,77 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RagSource'
+    AgentMessage:
+      type: object
+      required:
+        - role
+        - content
+      properties:
+        role:
+          type: string
+          enum: [user, assistant]
+        content:
+          type: string
+    AgentChatRequest:
+      type: object
+      required:
+        - messages
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentMessage'
+    ProposedAction:
+      type: object
+      required:
+        - id
+        - type
+        - summary
+        - payload
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [CREATE_EXPENSE, UPDATE_SALARY]
+        summary:
+          type: string
+        payload:
+          type: object
+          additionalProperties: true
+    AgentChatResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          $ref: '#/components/schemas/AgentMessage'
+        proposedActions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProposedAction'
+    ExecuteAgentActionRequest:
+      type: object
+      required:
+        - type
+        - payload
+      properties:
+        type:
+          type: string
+          enum: [CREATE_EXPENSE, UPDATE_SALARY]
+        payload:
+          type: object
+          additionalProperties: true
+    ExecuteAgentActionResponse:
+      type: object
+      required:
+        - success
+        - message
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: object
+          additionalProperties: true
