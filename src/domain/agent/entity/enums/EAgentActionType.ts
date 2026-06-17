@@ -1,0 +1,4 @@
+export enum EAgentActionType {
+  CREATE_EXPENSE = 'CREATE_EXPENSE',
+  UPDATE_SALARY = 'UPDATE_SALARY',
+}
