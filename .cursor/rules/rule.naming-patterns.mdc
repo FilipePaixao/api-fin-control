@@ -35,9 +35,13 @@ export enum EUserStatus {
 - Members in **UPPER_SNAKE_CASE**; value always **`'SAME_NAME_AS_MEMBER'`** (e.g. `STATUS_REQUIRES_FIELDS = 'STATUS_REQUIRES_FIELDS'`).
 - Avoid numeric enums for business states when the value is serialized or compared as a string.
 - Do not use loose `const` with magic strings in the domain when there is a closed set of values — prefer `enum E*`.
+- **Enum files (`E*.ts`) export only the enum** — no type guards (`isE*`), helpers, parsers or validation functions in the same file.
+- Do not create `isE*` / `is*Enum` helpers when a `switch`/`case E*.*` with `default` in service is enough; invalid values are handled by the `default` branch.
+- Do not add redundant membership checks (`Object.values(E*).includes(...)`) before a `switch` on the same enum — the `default` case already rejects invalid input.
 
 ## What to avoid
 
 - Interface without `I` prefix in domain contracts.
 - Numeric `enum` for codes/states that travel as strings.
 - Enum members with a string value different from the member name (breaks predictability and code search), except documented external requirement.
+- Functions, type guards or utilities inside `E*.ts` enum files.
