@@ -1,4 +1,4 @@
-import { randomBytes } from 'crypto';
+import { createHash } from 'crypto';
 import { Types } from 'mongoose';
 import { IThrowedError } from '@sauvvitech/st-packages';
 import { EErrorCode } from '../../common/errors/enums/EErrorCode';
@@ -56,7 +56,7 @@ export class AuthService implements IAuthService {
         status: 409,
         errorCode: EErrorCode.RESOURCE_CONFLICT,
         message: 'A user with this email already exists',
-        details: { email: params.email },
+        details: { field: 'email' },
       } as IThrowedError;
     }
 
@@ -68,14 +68,26 @@ export class AuthService implements IAuthService {
           status: 409,
           errorCode: EErrorCode.RESOURCE_CONFLICT,
           message: 'A user with this document already exists',
-          details: { document: params.document.value },
+          details: { field: 'document', documentType: params.document.type },
         } as IThrowedError;
       }
     }
 
+    if (!params.document) {
+      throw {
+        status: 400,
+        errorCode: EErrorCode.FIELD_INVALID,
+        message: 'Document is required',
+      } as IThrowedError;
+    }
+
     const passwordHash = await this.passwordHasher.hash(params.password);
     const userEntity = new RegisterUserServiceEntity({
-      ...params,
+      name: params.name,
+      email: params.email,
+      password: params.password,
+      document: params.document,
+      age: params.age,
       passwordHash,
     });
     const createdUser = await this.userRepositoryWrite.createUser(userEntity);
@@ -83,7 +95,9 @@ export class AuthService implements IAuthService {
   }
 
   async loginUser(params: ILoginUserParams): Promise<IAuthTokens> {
-    const user = await this.userRepositoryRead.findUserByEmail(params.email);
+    const user = await this.userRepositoryRead.findUserByEmailWithPasswordHash(
+      params.email.trim().toLowerCase(),
+    );
     if (!user?.passwordHash) {
       throw this.invalidCredentialsError();
     }
@@ -108,7 +122,7 @@ export class AuthService implements IAuthService {
   }
 
   async logout(params: ILogoutParams): Promise<void> {
-    const tokenHash = await this.passwordHasher.hash(params.refreshToken);
+    const tokenHash = this.hashRefreshToken(params.refreshToken);
     const storedRefreshToken =
       await this.refreshTokenRepositoryRead.findByTokenHash(tokenHash);
 
@@ -123,7 +137,7 @@ export class AuthService implements IAuthService {
     const { token: accessToken, expiresIn } =
       this.authTokenProvider.generateAccessToken(userId);
     const refreshTokenValue = this.authTokenProvider.generateRefreshTokenValue();
-    const tokenHash = await this.passwordHasher.hash(refreshTokenValue);
+    const tokenHash = this.hashRefreshToken(refreshTokenValue);
 
     const refreshTokenEntity: IRefreshToken = {
       id: new Types.ObjectId().toHexString(),
@@ -143,7 +157,7 @@ export class AuthService implements IAuthService {
   }
 
   private async findActiveRefreshToken(refreshToken: string): Promise<IRefreshToken> {
-    const tokenHash = await this.passwordHasher.hash(refreshToken);
+    const tokenHash = this.hashRefreshToken(refreshToken);
     const storedRefreshToken =
       await this.refreshTokenRepositoryRead.findByTokenHash(tokenHash);
 
@@ -172,6 +186,10 @@ export class AuthService implements IAuthService {
     }
 
     return storedRefreshToken;
+  }
+
+  private hashRefreshToken(refreshToken: string): string {
+    return createHash('sha256').update(refreshToken).digest('hex');
   }
 
   private invalidCredentialsError(): IThrowedError {
