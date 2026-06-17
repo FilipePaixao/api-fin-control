@@ -18,3 +18,8 @@ export const EMBEDDING_PROVIDER = process.env.EMBEDDING_PROVIDER || 'mock';
 export const EMBEDDING_VECTOR_SIZE =
   Number(process.env.EMBEDDING_VECTOR_SIZE) || 1536;
 export const RUN_PG_INTEGRATION = process.env.RUN_PG_INTEGRATION === 'true';
+
+export const OLLAMA_BASE_URL =
+  process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+export const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.2';
+export const OLLAMA_TIMEOUT_MS = Number(process.env.OLLAMA_TIMEOUT_MS) || 60000;

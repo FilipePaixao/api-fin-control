@@ -1,3 +1,4 @@
+/// <reference path="./types/express.d.ts" />
 import './configuration/dotenv';
 import path from 'path';
 import { Server } from './domain/server/server';
@@ -9,6 +10,7 @@ import { AuthControllerFactory } from './configuration/factory/auth.controller.f
 import { ExpenseControllerFactory } from './configuration/factory/expense.controller.factory';
 import { DashboardControllerFactory } from './configuration/factory/dashboard.controller.factory';
 import { RagControllerFactory } from './configuration/factory/rag.controller.factory';
+import { AgentControllerFactory } from './configuration/factory/agent.controller.factory';
 
 validateEnv();
 
@@ -25,6 +27,7 @@ const app = new Server({
     ExpenseControllerFactory.create(),
     DashboardControllerFactory.create(),
     RagControllerFactory.create(),
+    AgentControllerFactory.create(),
   ],
   databaseURI: DATABASE_URI,
   apiSpecLocation: OPEN_API_SPEC_FILE_LOCATION,

@@ -60,6 +60,38 @@ Base de projeto para APIs REST em **Node.js**, **TypeScript**, **Express** e **M
 
 ---
 
+## Agente de IA (Ollama)
+
+O assistente conversacional usa um LLM local via [Ollama](https://ollama.com).
+
+### Pré-requisitos
+
+1. Instale o Ollama e baixe um modelo com suporte a **tool calling** (recomendado: `llama3.2`):
+
+   ```bash
+   ollama pull llama3.2
+   ollama serve
+   ```
+
+2. Configure no `.env`:
+
+   ```env
+   OLLAMA_BASE_URL=http://localhost:11434
+   OLLAMA_MODEL=llama3.2
+   OLLAMA_TIMEOUT_MS=60000
+   ```
+
+### Endpoints
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| `POST` | `/api/agent/chat` | Conversa multi-turn; retorna `proposedActions` para cadastros |
+| `POST` | `/api/agent/actions/execute` | Executa ação confirmada (`CREATE_EXPENSE`, `UPDATE_SALARY`) |
+
+O endpoint legado `POST /api/rag/ask` permanece disponível.
+
+---
+
 ## Scripts principais
 
 | Comando | Função |
