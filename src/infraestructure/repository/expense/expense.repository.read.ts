@@ -13,7 +13,7 @@ export class ExpenseRepositoryRead implements IExpenseRepositoryRead {
     try {
       const expense = await ExpenseModel.findOne({ id });
       return expense ? dbToInternal(expense) : null;
-    } catch (error) {
+    } catch (error: any) {
       serviceLogErrorHandler(error, {
         eventName: 'ExpenseRepositoryRead.findExpenseById',
         eventData: { id },
@@ -53,7 +53,7 @@ export class ExpenseRepositoryRead implements IExpenseRepositoryRead {
         createdAt: -1,
       });
       return expenses.map(dbToInternal);
-    } catch (error) {
+    } catch (error: any) {
       serviceLogErrorHandler(error, {
         eventName: 'ExpenseRepositoryRead.listExpenses',
         eventData: { filter },
