@@ -1,4 +1,5 @@
-import { UserServiceEntity } from '../entity/user.entity';
+import { UserServiceEntity, toUserPublicProfile } from '../entity/user.entity';
+import { ISalary } from '../entity/interfaces/salary.interface';
 import { IUser } from '../entity/interfaces/user.interface';
 import { IUserRepositoryRead } from '../repository/user.repository.read';
 import { IUserRepositoryWrite } from '../repository/user.repository.write';
@@ -6,6 +7,7 @@ import {
   IParamsCreateUser,
   IParamsUpdateUser,
   IParamsUserService,
+  IUpdateSalaryInput,
   IUserService,
 } from '../interfaces/user.service.interface';
 import { IThrowedError } from '@sauvvitech/st-packages';
@@ -140,5 +142,56 @@ export class UserService implements IUserService {
    */
   async listUsers(filter: Partial<IUser> = {}): Promise<IUser[]> {
     return await this.userRepositoryRead.listUsers(filter);
+  }
+
+  async getAuthenticatedProfile(userId: string): Promise<Omit<IUser, 'passwordHash'>> {
+    const user = await this.getUserById(userId);
+    return toUserPublicProfile(user);
+  }
+
+  async updateSalary(userId: string, params: IUpdateSalaryInput): Promise<ISalary> {
+    const user = await this.userRepositoryRead.findUserById(userId);
+    if (!user) {
+      throw {
+        status: 404,
+        errorCode: EErrorCode.RESOURCE_NOT_FOUND,
+        message: 'User not found',
+        details: { id: userId },
+      } as IThrowedError;
+    }
+
+    const now = new Date();
+    const salary: ISalary = {
+      amount: params.amount,
+      currency: params.currency,
+      paymentDay: params.paymentDay,
+      source: params.source,
+      createdAt: user.salary?.createdAt ?? now,
+      updatedAt: now,
+    };
+
+    try {
+      UserServiceEntity.validateSalary(salary);
+    } catch (error) {
+      throw {
+        status: 400,
+        errorCode: EErrorCode.FIELD_INVALID,
+        message: error instanceof Error ? error.message : 'Invalid salary payload',
+      } as IThrowedError;
+    }
+
+    const updatedUser = await this.userRepositoryWrite.updateUserById(userId, {
+      salary,
+    });
+    if (!updatedUser?.salary) {
+      throw {
+        status: 404,
+        errorCode: EErrorCode.RESOURCE_NOT_FOUND,
+        message: 'User not found',
+        details: { id: userId },
+      } as IThrowedError;
+    }
+
+    return updatedUser.salary;
   }
 }
