@@ -10,7 +10,7 @@ export class RefreshTokenRepositoryRead implements IRefreshTokenRepositoryRead {
     try {
       const doc = await RefreshTokenModel.findOne({ tokenHash });
       return doc ? dbToInternal(doc) : null;
-    } catch (error: unknown) {
+    } catch (error: any) {
       serviceLogErrorHandler(error, {
         eventName: 'RefreshTokenRepositoryRead.findByTokenHash',
       });
