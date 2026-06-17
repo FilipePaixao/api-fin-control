@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-import jwt, { JwtPayload, TokenExpiredError } from 'jsonwebtoken';
+import jwt, { JwtPayload, SignOptions, TokenExpiredError } from 'jsonwebtoken';
 import {
   IAccessTokenPayload,
   IAuthTokenProvider,
@@ -32,7 +32,7 @@ function parseDurationToMilliseconds(duration: string): number {
 export class JwtTokenProvider implements IAuthTokenProvider {
   generateAccessToken(userId: string): IGeneratedAccessToken {
     const token = jwt.sign({ sub: userId }, JWT_SECRET, {
-      expiresIn: JWT_ACCESS_EXPIRES_IN,
+      expiresIn: JWT_ACCESS_EXPIRES_IN as SignOptions['expiresIn'],
     });
     const decoded = jwt.decode(token) as JwtPayload;
     const expiresIn =
