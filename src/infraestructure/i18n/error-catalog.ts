@@ -28,6 +28,27 @@ export const ErrorCatalog: Catalog<EErrorCode> = {
     en: 'Invalid username or password.',
     es: 'Usuario o contraseña inválidos.',
   },
+  [EErrorCode.AUTH_TOKEN_EXPIRED]: {
+    'pt-BR': 'Token de acesso expirado. Faça login novamente.',
+    en: 'Access token expired. Please log in again.',
+    es: 'Token de acceso expirado. Inicie sesión nuevamente.',
+  },
+  [EErrorCode.AUTH_TOKEN_REVOKED]: {
+    'pt-BR': 'Sessão revogada. Faça login novamente.',
+    en: 'Session revoked. Please log in again.',
+    es: 'Sesión revocada. Inicie sesión nuevamente.',
+  },
+  [EErrorCode.AUTH_UNAUTHORIZED]: {
+    'pt-BR': 'Não autorizado. Token inválido ou ausente.',
+    en: 'Unauthorized. Invalid or missing token.',
+    es: 'No autorizado. Token inválido o ausente.',
+  },
+  [EErrorCode.AGENT_LLM_UNAVAILABLE]: {
+    'pt-BR':
+      'Assistente de IA indisponível. Verifique se o Ollama está em execução.',
+    en: 'AI assistant unavailable. Please ensure Ollama is running.',
+    es: 'Asistente de IA no disponible. Verifique que Ollama esté en ejecución.',
+  },
   [EErrorCode.SERVICE_USER_UNKNOWN]: {
     'pt-BR': 'Usuário não encontrado. Verifique se os dados estão corretos.',
     en: 'User not found. Please check that the data is correct.',

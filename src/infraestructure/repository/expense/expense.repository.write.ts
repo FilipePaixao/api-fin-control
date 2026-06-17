@@ -10,7 +10,7 @@ export class ExpenseRepositoryWrite implements IExpenseRepositoryWrite {
     try {
       const createdExpense = await ExpenseModel.create(internalToDb(expense));
       return dbToInternal(createdExpense);
-    } catch (error) {
+    } catch (error: any) {
       serviceLogErrorHandler(error, {
         eventName: 'ExpenseRepositoryWrite.createExpense',
         eventData: { expenseId: expense.id, userId: expense.userId },
@@ -33,7 +33,7 @@ export class ExpenseRepositoryWrite implements IExpenseRepositoryWrite {
         { new: true },
       );
       return updatedExpense ? dbToInternal(updatedExpense) : null;
-    } catch (error) {
+    } catch (error: any) {
       serviceLogErrorHandler(error, {
         eventName: 'ExpenseRepositoryWrite.updateExpenseById',
         eventData: { id, payload },
@@ -49,7 +49,7 @@ export class ExpenseRepositoryWrite implements IExpenseRepositoryWrite {
     try {
       const deletedExpense = await ExpenseModel.findOneAndDelete({ id });
       return deletedExpense ? dbToInternal(deletedExpense) : null;
-    } catch (error) {
+    } catch (error: any) {
       serviceLogErrorHandler(error, {
         eventName: 'ExpenseRepositoryWrite.deleteExpenseById',
         eventData: { id },
