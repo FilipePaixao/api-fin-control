@@ -441,10 +441,14 @@ OLLAMA_TIMEOUT_MS=60000
 ## 11. Como rodar
 
 ```bash
+# Subir MongoDB + Postgres (pgvector) via Docker
+docker compose up -d
+
 # Instalar dependências
 yarn install
 
 # Desenvolvimento (hot reload)
+# Aplica scripts SQL do Postgres na subida (CREATE IF NOT EXISTS)
 yarn dev
 
 # Build + produção
@@ -454,6 +458,8 @@ yarn start
 # Health check
 curl http://localhost:3000/health
 ```
+
+> **Postgres:** os scripts em `src/infraestructure/db/postgres/init/` rodam automaticamente no `yarn dev`/`yarn start`. Se o volume Docker foi criado **antes** de existir algum script (ex.: `003_global_knowledge_embeddings.sql`), rode manualmente: `yarn db:postgres:init` ou recrie o volume (`docker compose down -v && docker compose up -d`).
 
 ---
 
@@ -529,6 +535,7 @@ Content-Type: application/json
 | `yarn clean` | Remove `dist/` |
 | `yarn agent:export-training-data` | Exporta JSONL anonimizado para fine-tune |
 | `yarn agent:fine-tune` | Pipeline offline (export + Modelfile) |
+| `yarn db:postgres:init` | Aplica migrations SQL do Postgres (pgvector) |
 
 ---
 

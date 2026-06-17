@@ -4,6 +4,7 @@ import path from 'path';
 import { Server } from './domain/server/server';
 import { validateEnv } from './configuration/env-constants/validate-env';
 import { PORT, DATABASE_URI } from './configuration/env-constants/env.constants';
+import { postgresSetup } from './infraestructure/db/postgres/postgres.setup';
 
 import { UserControllerFactory } from './configuration/factory/user.controller.factory';
 import { AuthControllerFactory } from './configuration/factory/auth.controller.factory';
@@ -35,7 +36,8 @@ const app = new Server({
 });
 
 async function start() {
-  app.databaseSetup();
+  await app.databaseSetup();
+  await postgresSetup();
   app.listen();
 }
 

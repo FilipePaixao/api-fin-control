@@ -20,7 +20,8 @@
     "test:mutation": "npx stryker run",
     "test:coverage": "jest --coverage --runInBand --forceExit --config ./jest/jest.int-config.ts --detectOpenHandles && jest --coverage --runInBand --forceExit --config ./jest/jest.config.ts --detectOpenHandles",
     "agent:export-training-data": "ts-node-dev --transpile-only --env-file=.env scripts/agent-export-training-data.ts",
-    "agent:fine-tune": "ts-node-dev --transpile-only --env-file=.env scripts/agent-fine-tune.ts"
+    "agent:fine-tune": "ts-node-dev --transpile-only --env-file=.env scripts/agent-fine-tune.ts",
+    "db:postgres:init": "ts-node-dev --transpile-only --env-file=.env scripts/postgres-init.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.16.0",
