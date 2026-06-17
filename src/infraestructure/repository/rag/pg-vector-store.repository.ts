@@ -37,7 +37,7 @@ export class PgVectorStoreRepository implements IVectorStoreRepository {
           new Date(),
         ],
       );
-    } catch (error) {
+    } catch (error: any) {
       serviceLogErrorHandler(error, {
         eventName: 'PgVectorStoreRepository.upsert',
         eventData: {
@@ -97,7 +97,7 @@ export class PgVectorStoreRepository implements IVectorStoreRepository {
         },
         score: row.score,
       }));
-    } catch (error) {
+    } catch (error: any) {
       serviceLogErrorHandler(error, {
         eventName: 'PgVectorStoreRepository.search',
         eventData: { userId, limit },
@@ -120,7 +120,7 @@ export class PgVectorStoreRepository implements IVectorStoreRepository {
          WHERE user_id = $1 AND source_type = $2 AND source_id = $3`,
         [userId, sourceType, sourceId],
       );
-    } catch (error) {
+    } catch (error: any) {
       serviceLogErrorHandler(error, {
         eventName: 'PgVectorStoreRepository.deleteBySource',
         eventData: { userId, sourceType, sourceId },
