@@ -9,63 +9,109 @@ import { IExpenseService } from '../../expense/interfaces/expense.service.interf
 import { ECurrency } from '../../user/entity/enums/ECurrency';
 import { UserServiceEntity } from '../../user/entity/user.entity';
 import { EAgentActionType } from '../entity/enums/EAgentActionType';
+import { EChatMessageRole } from '../entity/enums/EChatMessageRole';
 import {
   IAgentChatRequest,
   IAgentChatResponse,
   IAgentService,
   IProposedAction,
 } from '../interfaces/agent.service.interface';
+import { IConversationService } from '../interfaces/conversation.service.interface';
 import { ILlmMessage, ILlmProvider } from '../interfaces/llm-provider.interface';
 import { AGENT_TOOLS } from '../tools/agent-tools';
+import { IAgentKnowledgeService } from '../interfaces/agent-knowledge.service.interface';
 
 const MAX_AGENT_ITERATIONS = 5;
 const MAX_HISTORY_MESSAGES = 20;
-
-const SYSTEM_PROMPT = `Você é o assistente do FinControl, um app de controle financeiro pessoal.
-
-Comportamento:
-- Responda sempre em português brasileiro, de forma clara e amigável.
-- Você pode conversar sobre assuntos gerais quando o usuário quiser (incluindo gatos, hobbies, curiosidades).
-- Para dicas de controle financeiro, use as ferramentas de leitura para basear-se nos dados reais do usuário.
-- Para cadastrar despesa ou atualizar salário, use SEMPRE as ferramentas propose_create_expense ou propose_update_salary com todos os campos obrigatórios.
-- Se faltar informação para cadastrar (nome, valor, categoria, mês etc.), pergunte ao usuário antes de propor a ação.
-- Nunca invente dados financeiros — consulte get_financial_summary ou list_expenses quando necessário.
-- Categorias de despesa: HOUSING (Moradia), FOOD (Alimentação), TRANSPORT (Transporte), HEALTH (Saúde), EDUCATION (Educação), ENTERTAINMENT (Lazer), SUBSCRIPTIONS (Assinaturas), DEBT (Dívidas), INVESTMENT (Investimentos), OTHER (Outros).
-- Mês de referência no formato AAAA-MM. Se o usuário não informar, use o mês atual.
-- Ao propor cadastro, informe que o usuário precisará confirmar na interface.`;
 
 interface IParamsAgentService {
   llmProvider: ILlmProvider;
   dashboardService: IDashboardService;
   expenseService: IExpenseService;
+  conversationService: IConversationService;
+  systemPrompt: string;
+  agentKnowledgeService?: IAgentKnowledgeService;
 }
 
 export class AgentService implements IAgentService {
   private readonly llmProvider: ILlmProvider;
   private readonly dashboardService: IDashboardService;
   private readonly expenseService: IExpenseService;
+  private readonly conversationService: IConversationService;
+  private readonly systemPrompt: string;
+  private readonly agentKnowledgeService?: IAgentKnowledgeService;
 
-  constructor({ llmProvider, dashboardService, expenseService }: IParamsAgentService) {
+  constructor({
+    llmProvider,
+    dashboardService,
+    expenseService,
+    conversationService,
+    systemPrompt,
+    agentKnowledgeService,
+  }: IParamsAgentService) {
     this.llmProvider = llmProvider;
     this.dashboardService = dashboardService;
     this.expenseService = expenseService;
+    this.conversationService = conversationService;
+    this.systemPrompt = systemPrompt;
+    this.agentKnowledgeService = agentKnowledgeService;
   }
 
   async chat(userId: string, request: IAgentChatRequest): Promise<IAgentChatResponse> {
-    const userMessages = request.messages.filter((m) => m.content.trim());
-    if (userMessages.length === 0) {
+    const userMessageContent = request.message?.trim();
+    if (!userMessageContent) {
       throw {
         status: 400,
         errorCode: EErrorCode.FIELD_INVALID,
-        message: 'At least one message is required',
+        message: 'Message is required',
       } as IThrowedError;
     }
 
-    const trimmedHistory = userMessages.slice(-MAX_HISTORY_MESSAGES);
+    let conversationId = request.conversationId;
+    let isFirstUserMessage = false;
+
+    if (conversationId) {
+      await this.conversationService.assertConversationOwnership(userId, conversationId);
+      const existingMessages = await this.conversationService.getRecentMessages(
+        userId,
+        conversationId,
+        MAX_HISTORY_MESSAGES,
+      );
+      isFirstUserMessage = !existingMessages.some(
+        (message) => message.role === EChatMessageRole.USER,
+      );
+    } else {
+      const createdConversation = await this.conversationService.createConversation(userId);
+      conversationId = createdConversation.id;
+      isFirstUserMessage = true;
+    }
+
+    await this.conversationService.appendMessage({
+      conversationId,
+      userId,
+      role: EChatMessageRole.USER,
+      content: userMessageContent,
+    });
+
+    await this.conversationService.updateConversationAfterMessage(
+      userId,
+      conversationId,
+      userMessageContent,
+      isFirstUserMessage,
+    );
+
+    const storedMessages = await this.conversationService.getRecentMessages(
+      userId,
+      conversationId,
+      MAX_HISTORY_MESSAGES,
+    );
+
+    const globalKnowledgeContext = await this.buildGlobalKnowledgeContext(userMessageContent);
+
     const llmMessages: ILlmMessage[] = [
-      { role: 'system', content: SYSTEM_PROMPT },
-      ...trimmedHistory.map((message) => ({
-        role: message.role as ILlmMessage['role'],
+      { role: 'system', content: this.buildSystemPrompt(globalKnowledgeContext) },
+      ...storedMessages.map((message) => ({
+        role: (message.role === EChatMessageRole.USER ? 'user' : 'assistant') as ILlmMessage['role'],
         content: message.content,
       })),
     ];
@@ -83,10 +129,30 @@ export class AgentService implements IAgentService {
         llmMessages.push(assistantMessage);
 
         if (!assistantMessage.toolCalls?.length) {
+          const assistantContent = assistantMessage.content.trim() || 'Como posso ajudar?';
+
+          await this.conversationService.appendMessage({
+            conversationId,
+            userId,
+            role: EChatMessageRole.ASSISTANT,
+            content: assistantContent,
+            proposedActions: proposedActions.length ? proposedActions : undefined,
+          });
+
+          await this.conversationService.updateConversationAfterMessage(
+            userId,
+            conversationId,
+            userMessageContent,
+            false,
+          );
+
+          this.scheduleGlobalKnowledgeIndexing(userMessageContent, assistantContent);
+
           return {
+            conversationId,
             message: {
               role: 'assistant',
-              content: assistantMessage.content.trim() || 'Como posso ajudar?',
+              content: assistantContent,
             },
             proposedActions: proposedActions.length ? proposedActions : undefined,
           };
@@ -107,11 +173,22 @@ export class AgentService implements IAgentService {
         }
       }
 
+      const fallbackContent =
+        'Precisei de muitas etapas para processar seu pedido. Pode reformular de forma mais simples?';
+
+      await this.conversationService.appendMessage({
+        conversationId,
+        userId,
+        role: EChatMessageRole.ASSISTANT,
+        content: fallbackContent,
+        proposedActions: proposedActions.length ? proposedActions : undefined,
+      });
+
       return {
+        conversationId,
         message: {
           role: 'assistant',
-          content:
-            'Precisei de muitas etapas para processar seu pedido. Pode reformular de forma mais simples?',
+          content: fallbackContent,
         },
         proposedActions: proposedActions.length ? proposedActions : undefined,
       };
@@ -134,6 +211,56 @@ export class AgentService implements IAgentService {
             : 'AI assistant is temporarily unavailable',
       } as IThrowedError;
     }
+  }
+
+  private buildSystemPrompt(globalKnowledgeContext: string): string {
+    if (!globalKnowledgeContext) {
+      return this.systemPrompt;
+    }
+
+    return `${this.systemPrompt}
+
+---
+
+## Contexto dinâmico — Conhecimento geral da comunidade
+
+> Fonte anonimizada agregada de conversas anteriores. **Não contém dados pessoais de nenhum usuário.**
+> Use apenas para enriquecer dicas educativas gerais; **nunca** substitua consulta às ferramentas de leitura para dados deste usuário.
+
+${globalKnowledgeContext}`;
+  }
+
+  private async buildGlobalKnowledgeContext(userMessage: string): Promise<string> {
+    if (!this.agentKnowledgeService) {
+      return '';
+    }
+
+    try {
+      const snippets = await this.agentKnowledgeService.searchGlobalKnowledge(userMessage, 3);
+      if (!snippets.length) {
+        return '';
+      }
+
+      return snippets.map((snippet) => `- ${snippet}`).join('\n');
+    } catch {
+      return '';
+    }
+  }
+
+  private scheduleGlobalKnowledgeIndexing(
+    userMessage: string,
+    assistantMessage: string,
+  ): void {
+    if (!this.agentKnowledgeService) {
+      return;
+    }
+
+    setImmediate(() => {
+      void this.agentKnowledgeService?.extractAndIndexGlobalInsight(
+        userMessage,
+        assistantMessage,
+      );
+    });
   }
 
   private async executeTool(

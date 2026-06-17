@@ -23,3 +23,9 @@ export const OLLAMA_BASE_URL =
   process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
 export const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.2';
 export const OLLAMA_TIMEOUT_MS = Number(process.env.OLLAMA_TIMEOUT_MS) || 60000;
+
+export const AGENT_FINE_TUNE_ENABLED = process.env.AGENT_FINE_TUNE_ENABLED === 'true';
+export const AGENT_FINE_TUNE_MODEL_TAG =
+  process.env.AGENT_FINE_TUNE_MODEL_TAG || 'fincontrol-agent';
+export const AGENT_FINE_TUNE_MIN_SAMPLES =
+  Number(process.env.AGENT_FINE_TUNE_MIN_SAMPLES) || 500;

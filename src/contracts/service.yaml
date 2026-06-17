@@ -679,6 +679,156 @@ paths:
               schema:
                 $ref: '#/components/schemas/TranslatedApiError'
 
+  /api/agent/conversations:
+    get:
+      tags:
+        - Agent
+      summary: List user conversations
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Conversation'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+    post:
+      tags:
+        - Agent
+      summary: Create a new empty conversation
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewConversation'
+      responses:
+        '201':
+          description: Conversation created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+
+  /api/agent/conversations/{id}:
+    get:
+      tags:
+        - Agent
+      summary: Get conversation with messages
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Conversation with message history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationWithMessages'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '404':
+          description: Conversation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+    patch:
+      tags:
+        - Agent
+      summary: Rename conversation
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RenameConversation'
+      responses:
+        '200':
+          description: Conversation renamed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+        '400':
+          description: Invalid title
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '404':
+          description: Conversation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+    delete:
+      tags:
+        - Agent
+      summary: Delete conversation and messages
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Conversation deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '404':
+          description: Conversation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+
   /api/agent/chat:
     post:
       tags:
@@ -1240,12 +1390,90 @@ components:
     AgentChatRequest:
       type: object
       required:
-        - messages
+        - message
       properties:
-        messages:
+        conversationId:
+          type: string
+          description: Existing conversation id; omit to start a new chat
+        message:
+          type: string
+          description: User message for this turn
+    Conversation:
+      type: object
+      required:
+        - id
+        - userId
+        - title
+        - createdAt
+        - updatedAt
+        - lastMessageAt
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        title:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        lastMessageAt:
+          type: string
+          format: date-time
+    NewConversation:
+      type: object
+      properties:
+        title:
+          type: string
+    RenameConversation:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+    ChatMessage:
+      type: object
+      required:
+        - id
+        - conversationId
+        - userId
+        - role
+        - content
+        - createdAt
+      properties:
+        id:
+          type: string
+        conversationId:
+          type: string
+        userId:
+          type: string
+        role:
+          type: string
+          enum: [USER, ASSISTANT]
+        content:
+          type: string
+        proposedActions:
           type: array
           items:
-            $ref: '#/components/schemas/AgentMessage'
+            $ref: '#/components/schemas/ProposedAction'
+        createdAt:
+          type: string
+          format: date-time
+    ConversationWithMessages:
+      allOf:
+        - $ref: '#/components/schemas/Conversation'
+        - type: object
+          required:
+            - messages
+          properties:
+            messages:
+              type: array
+              items:
+                $ref: '#/components/schemas/ChatMessage'
     ProposedAction:
       type: object
       required:
@@ -1267,8 +1495,11 @@ components:
     AgentChatResponse:
       type: object
       required:
+        - conversationId
         - message
       properties:
+        conversationId:
+          type: string
         message:
           $ref: '#/components/schemas/AgentMessage'
         proposedActions:

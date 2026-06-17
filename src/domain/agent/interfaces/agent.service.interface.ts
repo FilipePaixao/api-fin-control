@@ -15,12 +15,14 @@ export interface IProposedAction {
 }
 
 export interface IAgentChatResponse {
+  conversationId: string;
   message: IAgentMessage;
   proposedActions?: IProposedAction[];
 }
 
 export interface IAgentChatRequest {
-  messages: IAgentMessage[];
+  conversationId?: string;
+  message: string;
 }
 
 export interface IExecuteAgentActionInput {

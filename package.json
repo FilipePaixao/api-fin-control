@@ -7,7 +7,7 @@
     "dev": "ts-node-dev --env-file=.env src/app.ts",
     "build": "tsc -p .;yarn run copy-essentials",
     "start": "node dist/src/app.js",
-    "copy-essentials": "mkdir -p dist/src/contracts && cp src/contracts/*.yaml dist/src/contracts",
+    "copy-essentials": "mkdir -p dist/src/contracts dist/src/domain/agent/prompts && cp src/contracts/*.yaml dist/src/contracts && cp src/domain/agent/prompts/*.md dist/src/domain/agent/prompts",
     "clean": "rm -rf dist",
     "prettier": "prettier --cache --write src/**/*.ts",
     "lint": "eslint --cache .",
@@ -18,7 +18,9 @@
     "test:int": "NODE_ENV=test NEW_RELIC_ENABLED=false NEW_RELIC_NO_CONFIG_FILE=true NEW_RELIC_LOG_LEVEL=error jest --runInBand --forceExit --config ./jest/jest.int-config.ts --detectOpenHandles",
     "test:component": "jest --runInBand --config ./jest/jest.component-config.ts --detectOpenHandles",
     "test:mutation": "npx stryker run",
-    "test:coverage": "jest --coverage --runInBand --forceExit --config ./jest/jest.int-config.ts --detectOpenHandles && jest --coverage --runInBand --forceExit --config ./jest/jest.config.ts --detectOpenHandles"
+    "test:coverage": "jest --coverage --runInBand --forceExit --config ./jest/jest.int-config.ts --detectOpenHandles && jest --coverage --runInBand --forceExit --config ./jest/jest.config.ts --detectOpenHandles",
+    "agent:export-training-data": "ts-node-dev --transpile-only --env-file=.env scripts/agent-export-training-data.ts",
+    "agent:fine-tune": "ts-node-dev --transpile-only --env-file=.env scripts/agent-fine-tune.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.16.0",

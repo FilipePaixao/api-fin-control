@@ -1,5 +1,6 @@
 import path from 'path';
 import { Server } from '../domain/server/server';
+import { AgentControllerFactory } from '../configuration/factory/agent.controller.factory';
 import { UserControllerFactory } from '../configuration/factory/user.controller.factory';
 
 const OPEN_API_SPEC_FILE_LOCATION = path.resolve(
@@ -9,7 +10,8 @@ const OPEN_API_SPEC_FILE_LOCATION = path.resolve(
 
 export const app = new Server({
   port: Number(process.env.PORT) || 3000,
-  controllers: [UserControllerFactory.create()],
+  controllers: [UserControllerFactory.create(), AgentControllerFactory.create()],
   databaseURI: process.env.DATABASE_URI,
   apiSpecLocation: OPEN_API_SPEC_FILE_LOCATION,
+  pathRoute: '/api',
 });

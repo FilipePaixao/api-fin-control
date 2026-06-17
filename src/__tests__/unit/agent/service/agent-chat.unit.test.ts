@@ -1,10 +1,15 @@
 import { EErrorCode } from '../../../../domain/common/errors/enums/EErrorCode';
 import { EExpenseCategory } from '../../../../domain/expense/entity/enums/EExpenseCategory';
 import { EAgentActionType } from '../../../../domain/agent/entity/enums/EAgentActionType';
+import { EChatMessageRole } from '../../../../domain/agent/entity/enums/EChatMessageRole';
 import { AgentService } from '../../../../domain/agent/service/agent.service';
 import { ILlmProvider } from '../../../../domain/agent/interfaces/llm-provider.interface';
+import { IConversationService } from '../../../../domain/agent/interfaces/conversation.service.interface';
+import { IAgentKnowledgeService } from '../../../../domain/agent/interfaces/agent-knowledge.service.interface';
 import { IDashboardService } from '../../../../domain/dashboard/interfaces/dashboard.service.interface';
 import { IExpenseService } from '../../../../domain/expense/interfaces/expense.service.interface';
+
+const TEST_SYSTEM_PROMPT = 'Assistente FinControl — prompt de teste unitário.';
 
 function createLlmProviderMock(
   override: Partial<ILlmProvider> = {},
@@ -38,16 +43,64 @@ function createExpenseServiceMock(
   };
 }
 
-describe('When chatting with empty messages in AgentService', () => {
+function createConversationServiceMock(
+  override: Partial<IConversationService> = {},
+): IConversationService {
+  const now = new Date();
+  return {
+    createConversation: jest.fn().mockResolvedValue({
+      id: 'conv-new',
+      userId: 'user-1',
+      title: 'Nova conversa',
+      createdAt: now,
+      updatedAt: now,
+      lastMessageAt: now,
+    }),
+    listConversations: jest.fn(),
+    getConversationWithMessages: jest.fn(),
+    renameConversation: jest.fn(),
+    deleteConversation: jest.fn(),
+    appendMessage: jest.fn().mockImplementation(async (input) => ({
+      id: `msg-${Math.random()}`,
+      ...input,
+      createdAt: new Date(),
+    })),
+    getRecentMessages: jest.fn().mockResolvedValue([]),
+    assertConversationOwnership: jest.fn().mockResolvedValue({
+      id: 'conv-1',
+      userId: 'user-1',
+      title: 'Nova conversa',
+      createdAt: now,
+      updatedAt: now,
+      lastMessageAt: now,
+    }),
+    updateConversationAfterMessage: jest.fn(),
+    ...override,
+  };
+}
+
+function createAgentKnowledgeServiceMock(
+  override: Partial<IAgentKnowledgeService> = {},
+): IAgentKnowledgeService {
+  return {
+    searchGlobalKnowledge: jest.fn().mockResolvedValue([]),
+    extractAndIndexGlobalInsight: jest.fn(),
+    ...override,
+  };
+}
+
+describe('When chatting with empty message in AgentService', () => {
   it('Should reject with FIELD_INVALID', async () => {
     const service = new AgentService({
       llmProvider: createLlmProviderMock(),
       dashboardService: createDashboardServiceMock(),
       expenseService: createExpenseServiceMock(),
+      conversationService: createConversationServiceMock(),
+      systemPrompt: TEST_SYSTEM_PROMPT,
     });
 
     await expect(
-      service.chat('user-1', { messages: [{ role: 'user', content: '   ' }] }),
+      service.chat('user-1', { message: '   ' }),
     ).rejects.toMatchObject({
       status: 400,
       errorCode: EErrorCode.FIELD_INVALID,
@@ -56,7 +109,7 @@ describe('When chatting with empty messages in AgentService', () => {
 });
 
 describe('When LLM returns a direct reply in AgentService', () => {
-  it('Should return assistant message without proposed actions', async () => {
+  it('Should return assistant message with conversationId', async () => {
     const llmProvider = createLlmProviderMock({
       chat: jest.fn().mockResolvedValue({
         message: { role: 'assistant', content: 'Olá! Como posso ajudar?' },
@@ -64,18 +117,33 @@ describe('When LLM returns a direct reply in AgentService', () => {
       }),
     });
 
+    const conversationService = createConversationServiceMock({
+      getRecentMessages: jest.fn().mockResolvedValue([
+        {
+          id: 'msg-1',
+          conversationId: 'conv-new',
+          userId: 'user-1',
+          role: EChatMessageRole.USER,
+          content: 'Oi',
+          createdAt: new Date(),
+        },
+      ]),
+    });
+
     const service = new AgentService({
       llmProvider,
       dashboardService: createDashboardServiceMock(),
       expenseService: createExpenseServiceMock(),
+      conversationService,
+      systemPrompt: TEST_SYSTEM_PROMPT,
+      agentKnowledgeService: createAgentKnowledgeServiceMock(),
     });
 
-    const response = await service.chat('user-1', {
-      messages: [{ role: 'user', content: 'Oi' }],
-    });
+    const response = await service.chat('user-1', { message: 'Oi' });
 
+    expect(response.conversationId).toBe('conv-new');
     expect(response.message.content).toBe('Olá! Como posso ajudar?');
-    expect(response.proposedActions).toBeUndefined();
+    expect(conversationService.appendMessage).toHaveBeenCalled();
   });
 });
 
@@ -112,20 +180,30 @@ describe('When LLM proposes create expense via tool in AgentService', () => {
     });
 
     const expenseService = createExpenseServiceMock();
+    const conversationService = createConversationServiceMock({
+      getRecentMessages: jest.fn().mockResolvedValue([
+        {
+          id: 'msg-1',
+          conversationId: 'conv-1',
+          userId: 'user-1',
+          role: EChatMessageRole.USER,
+          content: 'Cadastra despesa',
+          createdAt: new Date(),
+        },
+      ]),
+    });
 
     const service = new AgentService({
       llmProvider,
       dashboardService: createDashboardServiceMock(),
       expenseService,
+      conversationService,
+      systemPrompt: TEST_SYSTEM_PROMPT,
     });
 
     const response = await service.chat('user-1', {
-      messages: [
-        {
-          role: 'user',
-          content: 'Cadastra despesa de mercado R$ 150 em alimentação',
-        },
-      ],
+      conversationId: 'conv-1',
+      message: 'Cadastra despesa de mercado R$ 150 em alimentação',
     });
 
     expect(response.proposedActions).toHaveLength(1);
@@ -142,13 +220,22 @@ describe('When LLM provider fails in AgentService', () => {
       }),
       dashboardService: createDashboardServiceMock(),
       expenseService: createExpenseServiceMock(),
+      conversationService: createConversationServiceMock({
+        getRecentMessages: jest.fn().mockResolvedValue([
+          {
+            id: 'msg-1',
+            conversationId: 'conv-1',
+            userId: 'user-1',
+            role: EChatMessageRole.USER,
+            content: 'Olá',
+            createdAt: new Date(),
+          },
+        ]),
+      }),
+      systemPrompt: TEST_SYSTEM_PROMPT,
     });
 
-    await expect(
-      service.chat('user-1', {
-        messages: [{ role: 'user', content: 'Olá' }],
-      }),
-    ).rejects.toMatchObject({
+    await expect(service.chat('user-1', { message: 'Olá' })).rejects.toMatchObject({
       status: 503,
       errorCode: EErrorCode.AGENT_LLM_UNAVAILABLE,
     });
@@ -181,16 +268,29 @@ describe('When a downstream service throws during tool execution in AgentService
       }),
     });
 
+    const conversationService = createConversationServiceMock({
+      getRecentMessages: jest.fn().mockResolvedValue([
+        {
+          id: 'msg-1',
+          conversationId: 'conv-1',
+          userId: 'user-1',
+          role: EChatMessageRole.USER,
+          content: 'Qual meu resumo financeiro?',
+          createdAt: new Date(),
+        },
+      ]),
+    });
+
     const service = new AgentService({
       llmProvider,
       dashboardService,
       expenseService: createExpenseServiceMock(),
+      conversationService,
+      systemPrompt: TEST_SYSTEM_PROMPT,
     });
 
     await expect(
-      service.chat('user-1', {
-        messages: [{ role: 'user', content: 'Qual meu resumo financeiro?' }],
-      }),
+      service.chat('user-1', { message: 'Qual meu resumo financeiro?' }),
     ).rejects.toMatchObject({
       status: 404,
       errorCode: EErrorCode.RESOURCE_NOT_FOUND,

@@ -81,12 +81,53 @@ O assistente conversacional usa um LLM local via [Ollama](https://ollama.com).
    OLLAMA_TIMEOUT_MS=60000
    ```
 
+### System prompt (comportamento do agente)
+
+As regras, tom, restrições e boas práticas do assistente ficam em:
+
+**[`src/domain/agent/prompts/agent-system-prompt.md`](src/domain/agent/prompts/agent-system-prompt.md)**
+
+Esse arquivo é carregado na inicialização via factory (`loadAgentSystemPrompt`) e enviado como mensagem `system` ao Ollama. Edite-o para ajustar o comportamento sem alterar código TypeScript. Após `yarn build`, o `.md` é copiado para `dist/`.
+
 ### Endpoints
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `POST` | `/api/agent/chat` | Conversa multi-turn; retorna `proposedActions` para cadastros |
+| `GET` | `/api/agent/conversations` | Lista conversas do usuário |
+| `POST` | `/api/agent/conversations` | Cria conversa vazia |
+| `GET` | `/api/agent/conversations/:id` | Conversa com histórico de mensagens |
+| `PATCH` | `/api/agent/conversations/:id` | Renomeia conversa |
+| `DELETE` | `/api/agent/conversations/:id` | Exclui conversa e mensagens |
+| `POST` | `/api/agent/chat` | Envia mensagem (`conversationId` opcional); histórico fica no servidor |
 | `POST` | `/api/agent/actions/execute` | Executa ação confirmada (`CREATE_EXPENSE`, `UPDATE_SALARY`) |
+
+**Breaking change:** `POST /api/agent/chat` passou a receber `{ message, conversationId? }` em vez de `{ messages[] }`. O cliente não precisa mais reenviar o histórico completo.
+
+### Histórico e conhecimento global
+
+- Conversas e mensagens são persistidas no **MongoDB**, isoladas por `userId`.
+- Dicas gerais anonimizadas (sem PII) são indexadas em **Postgres/pgvector** (`global_knowledge_embeddings`) e usadas como contexto no system prompt.
+- Nenhum dado pessoal de um usuário é exposto a outro.
+
+### Fine-tuning offline
+
+1. Acumule conversas reais em produção/staging.
+2. Exporte dataset anonimizado:
+
+   ```bash
+   yarn agent:export-training-data
+   ```
+
+3. Pipeline completo (requer `AGENT_FINE_TUNE_ENABLED=true`):
+
+   ```bash
+   yarn agent:fine-tune
+   ```
+
+4. Após fine-tune externo com o JSONL gerado, aponte `OLLAMA_MODEL` para o tag configurado (`AGENT_FINE_TUNE_MODEL_TAG`, padrão `fincontrol-agent`).
+5. Rollback: volte `OLLAMA_MODEL=llama3.2`.
+
+Variáveis: `AGENT_FINE_TUNE_ENABLED`, `AGENT_FINE_TUNE_MODEL_TAG`, `AGENT_FINE_TUNE_MIN_SAMPLES` (mínimo de amostras para export).
 
 O endpoint legado `POST /api/rag/ask` permanece disponível.
 
@@ -106,6 +147,8 @@ O endpoint legado `POST /api/rag/ask` permanece disponível.
 | `yarn lint` / `yarn lint:fix` | ESLint |
 | `yarn prettier` | Formatação Prettier em `src/**/*.ts` |
 | `yarn clean` | Remove pasta `dist` |
+| `yarn agent:export-training-data` | Exporta JSONL anonimizado para fine-tune |
+| `yarn agent:fine-tune` | Pipeline offline de export + instruções Ollama |
 
 ---
 
