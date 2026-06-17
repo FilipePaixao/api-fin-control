@@ -10,7 +10,7 @@ export class RefreshTokenRepositoryWrite implements IRefreshTokenRepositoryWrite
     try {
       const doc = await RefreshTokenModel.create(internalToDb(refreshToken));
       return dbToInternal(doc);
-    } catch (error: unknown) {
+    } catch (error: any) {
       serviceLogErrorHandler(error, {
         eventName: 'RefreshTokenRepositoryWrite.createRefreshToken',
         eventData: { userId: refreshToken.userId },
@@ -25,7 +25,7 @@ export class RefreshTokenRepositoryWrite implements IRefreshTokenRepositoryWrite
   async revokeById(id: string): Promise<void> {
     try {
       await RefreshTokenModel.updateOne({ id }, { $set: { revokedAt: new Date() } });
-    } catch (error: unknown) {
+    } catch (error: any) {
       serviceLogErrorHandler(error, {
         eventName: 'RefreshTokenRepositoryWrite.revokeById',
         eventData: { id },
