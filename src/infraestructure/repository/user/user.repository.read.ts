@@ -38,6 +38,38 @@ export class UserRepositoryRead implements IUserRepositoryRead {
     }
   }
 
+  async findUserByEmailWithPasswordHash(email: string): Promise<IUser | null> {
+    try {
+      const doc = await UserModel.findOne({ email }).select('+passwordHash');
+      return doc ? dbToInternal(doc) : null;
+    } catch (error: any) {
+      serviceLogErrorHandler(error, {
+        eventName: 'UserRepositoryRead.findUserByEmailWithPasswordHash',
+        eventData: { email },
+      });
+      throw {
+        status: 500,
+        errorCode: EErrorCode.DATABASE_ERROR,
+      } as IThrowedError;
+    }
+  }
+
+  async findUserByDocument(documentValue: string): Promise<IUser | null> {
+    try {
+      const doc = await UserModel.findOne({ 'document.value': documentValue });
+      return doc ? dbToInternal(doc) : null;
+    } catch (error: any) {
+      serviceLogErrorHandler(error, {
+        eventName: 'UserRepositoryRead.findUserByDocument',
+        eventData: { documentValue },
+      });
+      throw {
+        status: 500,
+        errorCode: EErrorCode.DATABASE_ERROR,
+      } as IThrowedError;
+    }
+  }
+
   async listUsers(filter: Partial<IUser>): Promise<IUser[]> {
     try {
       const docs = await UserModel.find(filter);
