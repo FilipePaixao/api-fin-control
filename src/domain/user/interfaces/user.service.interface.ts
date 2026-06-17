@@ -1,5 +1,7 @@
 import { IUserRepositoryRead } from '../repository/user.repository.read';
 import { IUserRepositoryWrite } from '../repository/user.repository.write';
+import { ECurrency } from '../entity/enums/ECurrency';
+import { ISalary } from '../entity/interfaces/salary.interface';
 import { IUser } from '../entity/interfaces/user.interface';
 
 export interface IParamsCreateUser {
@@ -11,6 +13,13 @@ export interface IParamsCreateUser {
 
 export interface IParamsUpdateUser {
   userData: Partial<IUser>;
+}
+
+export interface IUpdateSalaryInput {
+  amount: number;
+  currency: ECurrency;
+  paymentDay?: number;
+  source?: string;
 }
 
 export interface IParamsUserService {
@@ -25,4 +34,6 @@ export interface IUserService {
   updateUserById(id: string, params: IParamsUpdateUser): Promise<IUser>;
   deleteUserById(id: string): Promise<IUser>;
   listUsers(filter: Partial<IUser>): Promise<IUser[]>;
+  updateSalary(userId: string, params: IUpdateSalaryInput): Promise<ISalary>;
+  getAuthenticatedProfile(userId: string): Promise<Omit<IUser, 'passwordHash'>>;
 }
