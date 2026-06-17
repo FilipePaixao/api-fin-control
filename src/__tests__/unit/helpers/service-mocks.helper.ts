@@ -14,6 +14,7 @@ export function createUserRepositoryReadMock(
 ): IUserRepositoryRead {
   return {
     findUserByEmail: jest.fn(),
+    findUserByEmailWithPasswordHash: jest.fn(),
     findUserById: jest.fn(),
     findUserByDocument: jest.fn(),
     listUsers: jest.fn(),
