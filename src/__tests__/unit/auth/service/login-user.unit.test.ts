@@ -13,7 +13,7 @@ describe('When logging in with invalid password in AuthService', () => {
   it('Should reject with AUTH_INVALID_CREDENTIALS', async () => {
     const authService = new AuthService({
       userRepositoryRead: createUserRepositoryReadMock({
-        findUserByEmail: jest.fn().mockResolvedValue({
+        findUserByEmailWithPasswordHash: jest.fn().mockResolvedValue({
           id: 'user-id',
           email: 'test@email.com',
           passwordHash: 'stored-hash',
@@ -48,7 +48,7 @@ describe('When logging in with valid credentials in AuthService', () => {
 
     const authService = new AuthService({
       userRepositoryRead: createUserRepositoryReadMock({
-        findUserByEmail: jest.fn().mockResolvedValue({
+        findUserByEmailWithPasswordHash: jest.fn().mockResolvedValue({
           id: 'user-id',
           email: 'test@email.com',
           passwordHash: 'stored-hash',
