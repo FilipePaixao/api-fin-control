@@ -239,4 +239,15 @@ export const ErrorCatalog: Catalog<EErrorCode> = {
     en: 'Failed to confirm user. Please try again.',
     es: 'Error al confirmar el usuario. Por favor, inténtelo de nuevo.',
   },
+  [EErrorCode.ONBOARDING_INCOMPLETE]: {
+    'pt-BR': 'Complete o onboarding do perfil antes de usar o assistente financeiro.',
+    en: 'Complete profile onboarding before using the financial assistant.',
+    es: 'Complete el onboarding del perfil antes de usar el asistente financiero.',
+  },
+  [EErrorCode.ONBOARDING_INVALID_STATE]: {
+    'pt-BR':
+      'Ação não permitida na etapa atual do onboarding. Siga a ordem definida pelo sistema.',
+    en: 'Action not allowed at the current onboarding stage. Follow the order defined by the system.',
+    es: 'Acción no permitida en la etapa actual del onboarding. Siga el orden definido por el sistema.',
+  },
 };
