@@ -85,7 +85,7 @@ describe('When getting dashboard summary without salary', () => {
           userId: 'user-1',
           name: 'Internet',
           amount: 180,
-          category: EExpenseCategory.UTILITIES,
+          category: EExpenseCategory.SUBSCRIPTIONS,
           status: EExpenseStatus.PAID,
           referenceMonth: '2026-06',
           createdAt: new Date(),
