@@ -12,6 +12,7 @@ function createConversationRepositoryReadMock(
   return {
     findConversationById: jest.fn(),
     listConversationsByUserId: jest.fn(),
+    findConversationByUserIdAndType: jest.fn(),
     ...override,
   };
 }
@@ -32,6 +33,7 @@ function createChatMessageRepositoryReadMock(
 ): IChatMessageRepositoryRead {
   return {
     listMessagesByConversationId: jest.fn(),
+    countMessagesByConversationId: jest.fn(),
     countUserMessagesByConversationId: jest.fn(),
     listMessagesIndexedForTraining: jest.fn(),
     listMessagesPendingTrainingExport: jest.fn(),
@@ -46,6 +48,7 @@ function createChatMessageRepositoryWriteMock(
     createMessage: jest.fn(),
     deleteMessagesByConversationId: jest.fn(),
     markMessagesIndexedForTraining: jest.fn(),
+    updateMessageProposedActions: jest.fn(),
     ...override,
   };
 }

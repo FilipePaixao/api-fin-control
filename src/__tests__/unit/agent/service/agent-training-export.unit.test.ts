@@ -1,5 +1,6 @@
 import { AgentTrainingExportService } from '../../../../domain/agent/service/agent-training-export.service';
 import { EChatMessageRole } from '../../../../domain/agent/entity/enums/EChatMessageRole';
+import { ITrainingDatasetWriter } from '../../../../domain/agent/interfaces/training-dataset-writer.interface';
 import { IChatMessageRepositoryRead } from '../../../../domain/agent/repository/chat-message.repository.read';
 import { IChatMessageRepositoryWrite } from '../../../../domain/agent/repository/chat-message.repository.write';
 import { IAgentModelVersionRepositoryWrite } from '../../../../domain/agent/repository/agent-model-version.repository';
@@ -9,6 +10,7 @@ function createChatMessageRepositoryReadMock(
 ): IChatMessageRepositoryRead {
   return {
     listMessagesByConversationId: jest.fn(),
+    countMessagesByConversationId: jest.fn(),
     countUserMessagesByConversationId: jest.fn(),
     listMessagesIndexedForTraining: jest.fn(),
     listMessagesPendingTrainingExport: jest.fn(),
@@ -23,6 +25,7 @@ function createChatMessageRepositoryWriteMock(
     createMessage: jest.fn(),
     deleteMessagesByConversationId: jest.fn(),
     markMessagesIndexedForTraining: jest.fn(),
+    updateMessageProposedActions: jest.fn(),
     ...override,
   };
 }
@@ -35,6 +38,9 @@ describe('When exporting training dataset in AgentTrainingExportService', () => 
       agentModelVersionRepositoryWrite: {
         createModelVersion: jest.fn(),
       } as IAgentModelVersionRepositoryWrite,
+      trainingDatasetWriter: {
+        writeJsonLines: jest.fn(),
+      } as ITrainingDatasetWriter,
       minSamples: 1,
       modelTag: 'fincontrol-agent',
     });
@@ -55,6 +61,9 @@ describe('When exporting training dataset in AgentTrainingExportService', () => 
       agentModelVersionRepositoryWrite: {
         createModelVersion: jest.fn(),
       } as IAgentModelVersionRepositoryWrite,
+      trainingDatasetWriter: {
+        writeJsonLines: jest.fn(),
+      } as ITrainingDatasetWriter,
       minSamples: 1,
       modelTag: 'fincontrol-agent',
     });
@@ -96,6 +105,9 @@ describe('When not enough samples for export in AgentTrainingExportService', () 
       agentModelVersionRepositoryWrite: {
         createModelVersion: jest.fn(),
       } as IAgentModelVersionRepositoryWrite,
+      trainingDatasetWriter: {
+        writeJsonLines: jest.fn(),
+      } as ITrainingDatasetWriter,
       minSamples: 500,
       modelTag: 'fincontrol-agent',
     });
