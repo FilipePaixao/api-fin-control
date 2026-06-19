@@ -1,0 +1,5 @@
+export enum EInvestmentProfile {
+  CONSERVATIVE = 'CONSERVATIVE',
+  MODERATE = 'MODERATE',
+  AGGRESSIVE = 'AGGRESSIVE',
+}
