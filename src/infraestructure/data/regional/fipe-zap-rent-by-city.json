@@ -1,0 +1,39 @@
+{
+  "referencePeriod": "2026-03",
+  "nationalAverage": {
+    "city": "Brasil",
+    "state": "BR",
+    "rentPerM2": 52.34,
+    "costOfLivingIndex": 100,
+    "costBreakdown": { "housing": 1.0, "food": 1.0, "transport": 1.0 }
+  },
+  "cities": [
+    { "city": "São Paulo", "state": "SP", "rentPerM2": 63.63, "costOfLivingIndex": 142, "costBreakdown": { "housing": 1.42, "food": 1.18, "transport": 1.25 } },
+    { "city": "Rio de Janeiro", "state": "RJ", "rentPerM2": 54.86, "costOfLivingIndex": 128, "costBreakdown": { "housing": 1.28, "food": 1.12, "transport": 1.15 } },
+    { "city": "Belém", "state": "PA", "rentPerM2": 63.55, "costOfLivingIndex": 118, "costBreakdown": { "housing": 1.35, "food": 1.05, "transport": 1.08 } },
+    { "city": "Recife", "state": "PE", "rentPerM2": 63.1, "costOfLivingIndex": 115, "costBreakdown": { "housing": 1.32, "food": 1.02, "transport": 1.06 } },
+    { "city": "Florianópolis", "state": "SC", "rentPerM2": 59.08, "costOfLivingIndex": 125, "costBreakdown": { "housing": 1.30, "food": 1.10, "transport": 1.12 } },
+    { "city": "São Luís", "state": "MA", "rentPerM2": 55.48, "costOfLivingIndex": 108, "costBreakdown": { "housing": 1.20, "food": 0.98, "transport": 1.00 } },
+    { "city": "Maceió", "state": "AL", "rentPerM2": 52.94, "costOfLivingIndex": 105, "costBreakdown": { "housing": 1.15, "food": 0.97, "transport": 0.98 } },
+    { "city": "Vitória", "state": "ES", "rentPerM2": 49.79, "costOfLivingIndex": 112, "costBreakdown": { "housing": 1.18, "food": 1.05, "transport": 1.08 } },
+    { "city": "Brasília", "state": "DF", "rentPerM2": 51.92, "costOfLivingIndex": 120, "costBreakdown": { "housing": 1.22, "food": 1.08, "transport": 1.15 } },
+    { "city": "Manaus", "state": "AM", "rentPerM2": 52.63, "costOfLivingIndex": 110, "costBreakdown": { "housing": 1.18, "food": 1.10, "transport": 1.05 } },
+    { "city": "Salvador", "state": "BA", "rentPerM2": 52.86, "costOfLivingIndex": 108, "costBreakdown": { "housing": 1.16, "food": 0.99, "transport": 1.02 } },
+    { "city": "Belo Horizonte", "state": "MG", "rentPerM2": 48.45, "costOfLivingIndex": 110, "costBreakdown": { "housing": 1.15, "food": 1.02, "transport": 1.05 } },
+    { "city": "João Pessoa", "state": "PB", "rentPerM2": 50.4, "costOfLivingIndex": 102, "costBreakdown": { "housing": 1.12, "food": 0.96, "transport": 0.97 } },
+    { "city": "Cuiabá", "state": "MT", "rentPerM2": 48.35, "costOfLivingIndex": 106, "costBreakdown": { "housing": 1.14, "food": 1.00, "transport": 1.02 } },
+    { "city": "Curitiba", "state": "PR", "rentPerM2": 47.22, "costOfLivingIndex": 108, "costBreakdown": { "housing": 1.12, "food": 1.00, "transport": 1.04 } },
+    { "city": "Porto Alegre", "state": "RS", "rentPerM2": 44.84, "costOfLivingIndex": 105, "costBreakdown": { "housing": 1.10, "food": 0.98, "transport": 1.00 } },
+    { "city": "Goiânia", "state": "GO", "rentPerM2": 43.41, "costOfLivingIndex": 100, "costBreakdown": { "housing": 1.05, "food": 0.95, "transport": 0.98 } },
+    { "city": "Natal", "state": "RN", "rentPerM2": 41.66, "costOfLivingIndex": 98, "costBreakdown": { "housing": 1.02, "food": 0.94, "transport": 0.96 } },
+    { "city": "Fortaleza", "state": "CE", "rentPerM2": 38.19, "costOfLivingIndex": 95, "costBreakdown": { "housing": 0.98, "food": 0.92, "transport": 0.95 } },
+    { "city": "Aracaju", "state": "SE", "rentPerM2": 34.02, "costOfLivingIndex": 90, "costBreakdown": { "housing": 0.92, "food": 0.90, "transport": 0.92 } },
+    { "city": "Campo Grande", "state": "MS", "rentPerM2": 30.75, "costOfLivingIndex": 88, "costBreakdown": { "housing": 0.88, "food": 0.88, "transport": 0.90 } },
+    { "city": "Teresina", "state": "PI", "rentPerM2": 29.65, "costOfLivingIndex": 85, "costBreakdown": { "housing": 0.85, "food": 0.87, "transport": 0.88 } }
+  ],
+  "stateAverages": [
+    { "city": "São Paulo", "state": "SP", "rentPerM2": 45.0, "costOfLivingIndex": 115, "costBreakdown": { "housing": 1.20, "food": 1.05, "transport": 1.10 } },
+    { "city": "Rio de Janeiro", "state": "RJ", "rentPerM2": 42.0, "costOfLivingIndex": 110, "costBreakdown": { "housing": 1.15, "food": 1.03, "transport": 1.08 } },
+    { "city": "Minas Gerais", "state": "MG", "rentPerM2": 35.0, "costOfLivingIndex": 95, "costBreakdown": { "housing": 1.00, "food": 0.95, "transport": 0.98 } }
+  ]
+}
