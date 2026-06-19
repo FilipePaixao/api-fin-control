@@ -8,6 +8,7 @@ import { IRagService } from '../../rag/interfaces/rag.service.interface';
 import { ECurrency } from '../../user/entity/enums/ECurrency';
 import { UserServiceEntity } from '../../user/entity/user.entity';
 import { IUserService } from '../../user/interfaces/user.service.interface';
+import { IConversationService } from '../interfaces/conversation.service.interface';
 import { EAgentActionType } from '../entity/enums/EAgentActionType';
 import {
   IAgentActionService,
@@ -18,30 +19,45 @@ interface IParamsAgentActionService {
   expenseService: IExpenseService;
   userService: IUserService;
   ragService: IRagService;
+  conversationService: IConversationService;
 }
 
 export class AgentActionService implements IAgentActionService {
   private readonly expenseService: IExpenseService;
   private readonly userService: IUserService;
   private readonly ragService: IRagService;
+  private readonly conversationService: IConversationService;
 
-  constructor({ expenseService, userService, ragService }: IParamsAgentActionService) {
+  constructor({
+    expenseService,
+    userService,
+    ragService,
+    conversationService,
+  }: IParamsAgentActionService) {
     this.expenseService = expenseService;
     this.userService = userService;
     this.ragService = ragService;
+    this.conversationService = conversationService;
   }
 
   async executeAction(
     userId: string,
-    input: { type?: unknown; payload?: unknown },
+    input: { type?: unknown; payload?: unknown; conversationId?: unknown; actionId?: unknown },
   ): Promise<IExecuteAgentActionResult> {
     const payload = (input.payload ?? {}) as Record<string, unknown>;
+    const conversationId =
+      typeof input.conversationId === 'string' ? input.conversationId.trim() : undefined;
+    const actionId = typeof input.actionId === 'string' ? input.actionId.trim() : undefined;
+
+    let result: IExecuteAgentActionResult;
 
     switch (input.type) {
       case EAgentActionType.CREATE_EXPENSE:
-        return this.executeCreateExpense(userId, payload);
+        result = await this.executeCreateExpense(userId, payload);
+        break;
       case EAgentActionType.UPDATE_SALARY:
-        return this.executeUpdateSalary(userId, payload);
+        result = await this.executeUpdateSalary(userId, payload);
+        break;
       default:
         throw {
           status: 400,
@@ -49,6 +65,12 @@ export class AgentActionService implements IAgentActionService {
           message: 'Invalid action type',
         } as IThrowedError;
     }
+
+    if (result.success && conversationId && actionId) {
+      await this.removeProposedActionSafely(userId, conversationId, actionId);
+    }
+
+    return result;
   }
 
   private async executeCreateExpense(
@@ -165,6 +187,18 @@ export class AgentActionService implements IAgentActionService {
       await this.ragService.syncUserFinancialContext(userId);
     } catch {
       // RAG sync is best-effort after mutations
+    }
+  }
+
+  private async removeProposedActionSafely(
+    userId: string,
+    conversationId: string,
+    actionId: string,
+  ): Promise<void> {
+    try {
+      await this.conversationService.removeProposedAction(userId, conversationId, actionId);
+    } catch {
+      // Best-effort cleanup of pending action metadata
     }
   }
 }

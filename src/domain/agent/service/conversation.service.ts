@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 import { IThrowedError } from '@sauvvitech/st-packages';
 import { EErrorCode } from '../../common/errors/enums/EErrorCode';
+import { EConversationType } from '../entity/enums/EConversationType';
 import { EChatMessageRole } from '../entity/enums/EChatMessageRole';
 import {
   IAppendChatMessageInput,
@@ -56,6 +57,7 @@ export class ConversationService implements IConversationService {
       id: randomUUID(),
       userId,
       title: input.title?.trim() || DEFAULT_CONVERSATION_TITLE,
+      type: input.type ?? EConversationType.GENERAL,
       createdAt: now,
       updatedAt: now,
       lastMessageAt: now,
@@ -65,7 +67,11 @@ export class ConversationService implements IConversationService {
   }
 
   async listConversations(userId: string): Promise<IConversation[]> {
-    return this.conversationRepositoryRead.listConversationsByUserId(userId);
+    const conversations = await this.conversationRepositoryRead.listConversationsByUserId(
+      userId,
+      EConversationType.GENERAL,
+    );
+    return conversations;
   }
 
   async getConversationWithMessages(
@@ -141,7 +147,14 @@ export class ConversationService implements IConversationService {
     limit: number,
   ): Promise<IChatMessage[]> {
     await this.assertConversationOwnership(userId, conversationId);
-    return this.chatMessageRepositoryRead.listMessagesByConversationId(conversationId, limit);
+    const totalCount =
+      await this.chatMessageRepositoryRead.countMessagesByConversationId(conversationId);
+    const skipCount = Math.max(0, totalCount - limit);
+
+    return this.chatMessageRepositoryRead.listMessagesByConversationId(conversationId, {
+      skip: skipCount,
+      limit,
+    });
   }
 
   async assertConversationOwnership(
@@ -183,6 +196,41 @@ export class ConversationService implements IConversationService {
     await this.conversationRepositoryWrite.updateConversationById(conversationId, updateData);
   }
 
+  async removeProposedAction(
+    userId: string,
+    conversationId: string,
+    actionId: string,
+  ): Promise<void> {
+    await this.assertConversationOwnership(userId, conversationId);
+
+    const messages = await this.chatMessageRepositoryRead.listMessagesByConversationId(
+      conversationId,
+    );
+    const lastAssistant = [...messages]
+      .reverse()
+      .find((message) => message.role === EChatMessageRole.ASSISTANT);
+
+    if (!lastAssistant?.proposedActions?.length) {
+      return;
+    }
+
+    const remainingActions = lastAssistant.proposedActions.filter(
+      (action) => action.id !== actionId,
+    );
+
+    if (remainingActions.length === lastAssistant.proposedActions.length) {
+      return;
+    }
+
+    const proposedActionsToPersist =
+      remainingActions.length > 0 ? remainingActions : undefined;
+
+    await this.chatMessageRepositoryWrite.updateMessageProposedActions(
+      lastAssistant.id,
+      proposedActionsToPersist,
+    );
+  }
+
   private buildAutoTitle(content: string): string {
     const normalizedContent = content.trim().replace(/\s+/g, ' ');
     if (!normalizedContent) {
@@ -194,5 +242,22 @@ export class ConversationService implements IConversationService {
     }
 
     return `${normalizedContent.slice(0, AUTO_TITLE_MAX_LENGTH - 3)}...`;
+  }
+
+  async getOrCreateOnboardingConversation(userId: string): Promise<IConversation> {
+    const existingConversation =
+      await this.conversationRepositoryRead.findConversationByUserIdAndType(
+        userId,
+        EConversationType.ONBOARDING,
+      );
+
+    if (existingConversation) {
+      return existingConversation;
+    }
+
+    return this.createConversation(userId, {
+      title: 'Conhecendo você',
+      type: EConversationType.ONBOARDING,
+    });
   }
 }

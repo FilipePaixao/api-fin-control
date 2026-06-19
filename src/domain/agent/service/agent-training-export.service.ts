@@ -1,11 +1,10 @@
-import { promises as fs } from 'fs';
-import path from 'path';
 import { randomUUID } from 'crypto';
 import { IThrowedError } from '@sauvvitech/st-packages';
 import { EErrorCode } from '../../common/errors/enums/EErrorCode';
 import { EChatMessageRole } from '../entity/enums/EChatMessageRole';
 import { IChatMessage } from '../entity/interfaces/chat-message.interface';
 import { IAgentTrainingExportService } from '../interfaces/agent-training-export.service.interface';
+import { ITrainingDatasetWriter } from '../interfaces/training-dataset-writer.interface';
 import { IAgentModelVersionRepositoryWrite } from '../repository/agent-model-version.repository';
 import { IChatMessageRepositoryRead } from '../repository/chat-message.repository.read';
 import { IChatMessageRepositoryWrite } from '../repository/chat-message.repository.write';
@@ -23,6 +22,7 @@ interface IParamsAgentTrainingExportService {
   chatMessageRepositoryRead: IChatMessageRepositoryRead;
   chatMessageRepositoryWrite: IChatMessageRepositoryWrite;
   agentModelVersionRepositoryWrite: IAgentModelVersionRepositoryWrite;
+  trainingDatasetWriter: ITrainingDatasetWriter;
   minSamples: number;
   modelTag: string;
 }
@@ -37,6 +37,7 @@ export class AgentTrainingExportService implements IAgentTrainingExportService {
   private readonly chatMessageRepositoryRead: IChatMessageRepositoryRead;
   private readonly chatMessageRepositoryWrite: IChatMessageRepositoryWrite;
   private readonly agentModelVersionRepositoryWrite: IAgentModelVersionRepositoryWrite;
+  private readonly trainingDatasetWriter: ITrainingDatasetWriter;
   private readonly minSamples: number;
   private readonly modelTag: string;
 
@@ -44,12 +45,14 @@ export class AgentTrainingExportService implements IAgentTrainingExportService {
     chatMessageRepositoryRead,
     chatMessageRepositoryWrite,
     agentModelVersionRepositoryWrite,
+    trainingDatasetWriter,
     minSamples,
     modelTag,
   }: IParamsAgentTrainingExportService) {
     this.chatMessageRepositoryRead = chatMessageRepositoryRead;
     this.chatMessageRepositoryWrite = chatMessageRepositoryWrite;
     this.agentModelVersionRepositoryWrite = agentModelVersionRepositoryWrite;
+    this.trainingDatasetWriter = trainingDatasetWriter;
     this.minSamples = minSamples;
     this.modelTag = modelTag;
   }
@@ -70,8 +73,6 @@ export class AgentTrainingExportService implements IAgentTrainingExportService {
       } as IThrowedError;
     }
 
-    await fs.mkdir(path.dirname(outputPath), { recursive: true });
-
     const jsonlLines = anonymizedPairs.map((pair) =>
       JSON.stringify({
         instruction: pair.instruction,
@@ -79,7 +80,7 @@ export class AgentTrainingExportService implements IAgentTrainingExportService {
       }),
     );
 
-    await fs.writeFile(outputPath, `${jsonlLines.join('\n')}\n`, 'utf8');
+    await this.trainingDatasetWriter.writeJsonLines(outputPath, jsonlLines);
 
     const exportedMessageIds = anonymizedPairs.flatMap((pair) => pair.messageIds);
     await this.chatMessageRepositoryWrite.markMessagesIndexedForTraining(exportedMessageIds);

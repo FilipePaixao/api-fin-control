@@ -26,6 +26,11 @@ export interface IAuthTokens {
   expiresIn: number;
 }
 
+export interface IRegisterUserResult extends IAuthTokens {
+  user: IUserPublicProfile;
+  onboardingRequired: boolean;
+}
+
 export interface IRefreshSessionParams {
   refreshToken: string;
 }
@@ -44,7 +49,7 @@ export interface IParamsAuthService {
 }
 
 export interface IAuthService {
-  registerUser(params: IRegisterUserParams): Promise<IUserPublicProfile>;
+  registerUser(params: IRegisterUserParams): Promise<IRegisterUserResult>;
   loginUser(params: ILoginUserParams): Promise<IAuthTokens>;
   refreshSession(params: IRefreshSessionParams): Promise<IAuthTokens>;
   logout(params: ILogoutParams): Promise<void>;
