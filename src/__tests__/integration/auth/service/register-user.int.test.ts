@@ -11,11 +11,18 @@ describe('When registering user with a valid payload in AuthService', () => {
     const registeredUser = await authService.registerUser(payload);
 
     expect(registeredUser).toMatchObject({
-      name: payload.name,
-      email: payload.email,
-      document: payload.document,
+      user: {
+        name: payload.name,
+        email: payload.email,
+        document: payload.document,
+        onboardingRequired: true,
+      },
+      accessToken: expect.any(String),
+      refreshToken: expect.any(String),
+      expiresIn: expect.any(Number),
+      onboardingRequired: true,
     });
-    expect((registeredUser as { passwordHash?: string }).passwordHash).toBeUndefined();
+    expect((registeredUser.user as { passwordHash?: string }).passwordHash).toBeUndefined();
   });
 });
 
