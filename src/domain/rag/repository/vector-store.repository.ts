@@ -1,5 +1,12 @@
 import { EEmbeddingSourceType } from '../entity/enums/EEmbeddingSourceType';
 
+export interface IVectorSearchFilter {
+  sourceType?: EEmbeddingSourceType;
+  referenceMonth?: string;
+  category?: string;
+  status?: string;
+}
+
 export interface IVectorDocument {
   id: string;
   userId: string;
@@ -7,6 +14,9 @@ export interface IVectorDocument {
   sourceId: string;
   content: string;
   metadata?: Record<string, unknown>;
+  referenceMonth?: string;
+  category?: string;
+  status?: string;
   createdAt: Date;
 }
 
@@ -21,6 +31,7 @@ export interface IVectorStoreRepository {
     userId: string,
     embedding: number[],
     limit: number,
+    filter?: IVectorSearchFilter,
   ): Promise<IVectorSearchResult[]>;
   deleteBySource(
     userId: string,
