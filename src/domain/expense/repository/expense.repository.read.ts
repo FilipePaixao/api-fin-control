@@ -13,5 +13,6 @@ export interface IExpenseReadFilter {
 
 export interface IExpenseRepositoryRead {
   findExpenseById(id: string): Promise<IExpense | null>;
+  findExpensesByIds(userId: string, ids: string[]): Promise<IExpense[]>;
   listExpenses(filter: IExpenseReadFilter): Promise<IExpense[]>;
 }

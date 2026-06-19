@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import { generateId } from '../../common/utils/generate-id';
 import { EExpenseCategory } from './enums/EExpenseCategory';
 import { EPaymentMethod } from './enums/EPaymentMethod';
 import { EExpenseStatus } from './enums/EExpenseStatus';
@@ -26,7 +26,7 @@ export class ExpenseServiceEntity implements IExpense {
 
   constructor(expense: IExpense | (ICreateExpenseInput & { id?: string })) {
     ExpenseServiceEntity.validateExpenseInput(expense);
-    this.id = expense.id || new Types.ObjectId().toHexString();
+    this.id = expense.id || generateId();
     this.userId = expense.userId;
     this.name = expense.name.trim();
     this.description = expense.description?.trim();

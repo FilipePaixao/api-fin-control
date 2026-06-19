@@ -1,4 +1,4 @@
-import { IThrowedError } from '@sauvvitech/st-packages';
+import { serviceLogErrorHandler, IThrowedError } from '@sauvvitech/st-packages';
 import { EErrorCode } from '../../common/errors/enums/EErrorCode';
 import { EExpenseStatus } from '../entity/enums/EExpenseStatus';
 import { ExpenseServiceEntity } from '../entity/expense.entity';
@@ -10,14 +10,27 @@ import {
   IUpdateExpenseInput,
 } from '../interfaces/expense.service.interface';
 import { ICreateExpenseInput, IExpense } from '../entity/interfaces/expense.interface';
+import { toExpenseIndexDocument } from '../utils/expense-index-document.utils';
 
 export class ExpenseService implements IExpenseService {
   private readonly expenseRepositoryRead: IParamsExpenseService['expenseRepositoryRead'];
   private readonly expenseRepositoryWrite: IParamsExpenseService['expenseRepositoryWrite'];
+  private readonly expenseSearchService?: IParamsExpenseService['expenseSearchService'];
+  private readonly expenseIndexRepository?: IParamsExpenseService['expenseIndexRepository'];
+  private readonly ragService?: IParamsExpenseService['ragService'];
 
-  constructor({ expenseRepositoryRead, expenseRepositoryWrite }: IParamsExpenseService) {
+  constructor({
+    expenseRepositoryRead,
+    expenseRepositoryWrite,
+    expenseSearchService,
+    expenseIndexRepository,
+    ragService,
+  }: IParamsExpenseService) {
     this.expenseRepositoryRead = expenseRepositoryRead;
     this.expenseRepositoryWrite = expenseRepositoryWrite;
+    this.expenseSearchService = expenseSearchService;
+    this.expenseIndexRepository = expenseIndexRepository;
+    this.ragService = ragService;
   }
 
   async createExpense(userId: string, payload: ICreateExpenseInput): Promise<IExpense> {
@@ -25,13 +38,23 @@ export class ExpenseService implements IExpenseService {
       ...payload,
       userId,
     });
-    return this.expenseRepositoryWrite.createExpense(expenseEntity);
+    const createdExpense = await this.expenseRepositoryWrite.createExpense(expenseEntity);
+    this.scheduleExpenseIndexing(createdExpense);
+    return createdExpense;
   }
 
   async listExpenses(userId: string, filters: IExpenseFilters): Promise<IExpense[]> {
+    if (filters.search?.trim() && this.expenseSearchService) {
+      return this.expenseSearchService.searchExpenses(userId, filters);
+    }
+
     return this.expenseRepositoryRead.listExpenses({
       userId,
-      ...filters,
+      category: filters.category,
+      status: filters.status,
+      referenceMonth: filters.referenceMonth,
+      from: filters.from,
+      to: filters.to,
     });
   }
 
@@ -81,6 +104,7 @@ export class ExpenseService implements IExpenseService {
       },
     );
     this.assertExpenseOwnershipOrNotFound(updatedExpense, userId, expenseId);
+    this.scheduleExpenseIndexing(updatedExpense);
     return updatedExpense;
   }
 
@@ -88,6 +112,7 @@ export class ExpenseService implements IExpenseService {
     const expense = await this.expenseRepositoryRead.findExpenseById(expenseId);
     this.assertExpenseOwnershipOrNotFound(expense, userId, expenseId);
     await this.expenseRepositoryWrite.deleteExpenseById(expenseId);
+    this.scheduleExpenseRemoval(userId, expenseId);
   }
 
   async payExpenseById(
@@ -108,7 +133,40 @@ export class ExpenseService implements IExpenseService {
       },
     );
     this.assertExpenseOwnershipOrNotFound(updatedExpense, userId, expenseId);
+    this.scheduleExpenseIndexing(updatedExpense);
     return updatedExpense;
+  }
+
+  private scheduleExpenseIndexing(expense: IExpense): void {
+    if (!this.expenseIndexRepository && !this.ragService) {
+      return;
+    }
+
+    void Promise.all([
+      this.expenseIndexRepository?.upsert(toExpenseIndexDocument(expense)),
+      this.ragService?.syncExpense(expense.userId, expense),
+    ]).catch((error) => {
+      serviceLogErrorHandler(error, {
+        eventName: 'ExpenseService.scheduleExpenseIndexing',
+        eventData: { expenseId: expense.id, userId: expense.userId },
+      });
+    });
+  }
+
+  private scheduleExpenseRemoval(userId: string, expenseId: string): void {
+    if (!this.expenseIndexRepository && !this.ragService) {
+      return;
+    }
+
+    void Promise.all([
+      this.expenseIndexRepository?.delete(userId, expenseId),
+      this.ragService?.removeExpense(userId, expenseId),
+    ]).catch((error) => {
+      serviceLogErrorHandler(error, {
+        eventName: 'ExpenseService.scheduleExpenseRemoval',
+        eventData: { expenseId, userId },
+      });
+    });
   }
 
   private assertExpenseOwnershipOrNotFound(

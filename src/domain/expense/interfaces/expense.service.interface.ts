@@ -4,6 +4,9 @@ import { EPaymentMethod } from '../entity/enums/EPaymentMethod';
 import { ICreateExpenseInput, IExpense } from '../entity/interfaces/expense.interface';
 import { IExpenseRepositoryRead } from '../repository/expense.repository.read';
 import { IExpenseRepositoryWrite } from '../repository/expense.repository.write';
+import { IExpenseIndexRepository } from '../../expense-search/interfaces/expense-index.repository';
+import { IExpenseSearchService } from '../../expense-search/interfaces/expense-search.service.interface';
+import { IRagService } from '../../rag/interfaces/rag.service.interface';
 
 export interface IExpenseFilters {
   category?: EExpenseCategory;
@@ -11,6 +14,7 @@ export interface IExpenseFilters {
   referenceMonth?: string;
   from?: Date;
   to?: Date;
+  search?: string;
 }
 
 export interface IUpdateExpenseInput {
@@ -32,6 +36,9 @@ export interface IPayExpenseInput {
 export interface IParamsExpenseService {
   expenseRepositoryRead: IExpenseRepositoryRead;
   expenseRepositoryWrite: IExpenseRepositoryWrite;
+  expenseSearchService?: IExpenseSearchService;
+  expenseIndexRepository?: IExpenseIndexRepository;
+  ragService?: IRagService;
 }
 
 export interface IExpenseService {
