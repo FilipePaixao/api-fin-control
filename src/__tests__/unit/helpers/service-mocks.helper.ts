@@ -38,6 +38,7 @@ export function createExpenseRepositoryReadMock(
 ): IExpenseRepositoryRead {
   return {
     findExpenseById: jest.fn(),
+    findExpensesByIds: jest.fn(),
     listExpenses: jest.fn(),
     ...override,
   };

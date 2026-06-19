@@ -1,5 +1,4 @@
 import { MongooseDatabase } from '../../jest/setup-db';
-import { app } from './configApp';
 
 export async function bootstrapTest() {
   const DATABASE_URI = String(process.env.DATABASE_URI || '');
@@ -7,6 +6,8 @@ export async function bootstrapTest() {
   const dbInstance = new MongooseDatabase(DATABASE_URI, DB_NAME);
 
   await dbInstance.start();
+
+  const { app } = await import('./configApp');
 
   return {
     dbInstance,
