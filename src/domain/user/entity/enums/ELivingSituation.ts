@@ -1,0 +1,7 @@
+export enum ELivingSituation {
+  ALONE = 'ALONE',
+  WITH_PARENTS = 'WITH_PARENTS',
+  WITH_PARTNER = 'WITH_PARTNER',
+  WITH_ROOMMATES = 'WITH_ROOMMATES',
+  OTHER = 'OTHER',
+}

@@ -1,18 +1,27 @@
-import { Types } from 'mongoose';
+import { EErrorCode } from '../../common/errors/enums/EErrorCode';
+import { generateId } from '../../common/utils/generate-id';
 import { EDocumentType } from './enums/EDocumentType';
 import { ECurrency } from './enums/ECurrency';
+import { EInvestmentProfile } from './enums/EInvestmentProfile';
+import { ELivingSituation } from './enums/ELivingSituation';
+import { IAddress } from './interfaces/address.interface';
 import { IDocument } from './interfaces/document.interface';
 import { ISalary } from './interfaces/salary.interface';
+import { IUserProfile } from './interfaces/user-profile.interface';
 import {
   IRegisterUserInput,
   IUser,
+  IUserPublicProfile,
 } from './interfaces/user.interface';
+import { isOnboardingRequired } from '../utils/user-profile.utils';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const CPF_REGEX = /^\d{11}$/;
 const CNPJ_REGEX = /^\d{14}$/;
 const PASSWORD_REGEX =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/;
+const ZIP_CODE_REGEX = /^\d{8}$/;
+const STATE_REGEX = /^[A-Z]{2}$/;
 
 export class UserServiceEntity implements IUser {
   id: string;
@@ -22,18 +31,20 @@ export class UserServiceEntity implements IUser {
   document?: IDocument;
   salary?: ISalary;
   age?: number;
+  profile?: IUserProfile;
   createdAt: Date;
   updatedAt?: Date;
 
   constructor(user: IUser) {
     this.validateUser(user);
-    this.id = user.id || new Types.ObjectId().toHexString();
+    this.id = user.id || generateId();
     this.name = user.name.trim();
     this.email = user.email.trim().toLowerCase();
     this.passwordHash = user.passwordHash;
     this.document = user.document;
     this.salary = user.salary;
     this.age = user.age;
+    this.profile = user.profile;
     this.createdAt = user.createdAt || new Date();
     this.updatedAt = user.updatedAt;
   }
@@ -53,6 +64,9 @@ export class UserServiceEntity implements IUser {
     }
     if (user.salary) {
       this.validateSalary(user.salary);
+    }
+    if (user.profile) {
+      UserServiceEntity.validateProfile(user.profile);
     }
   }
 
@@ -89,6 +103,77 @@ export class UserServiceEntity implements IUser {
     }
   }
 
+  static validateAddress(address: IAddress): void {
+    const zipCode = address.zipCode?.replace(/\D/g, '') ?? '';
+    if (!ZIP_CODE_REGEX.test(zipCode)) {
+      throw {
+        status: 400,
+        errorCode: EErrorCode.ADDRESS_INVALID_ZIP_CODE,
+        message: 'Invalid zip code',
+      };
+    }
+
+    if (!address.street?.trim()) {
+      throw new Error('Street is required');
+    }
+    if (!address.neighborhood?.trim()) {
+      throw new Error('Neighborhood is required');
+    }
+    if (!address.city?.trim()) {
+      throw new Error('City is required');
+    }
+    if (!address.state?.trim() || !STATE_REGEX.test(address.state.trim().toUpperCase())) {
+      throw {
+        status: 400,
+        errorCode: EErrorCode.ADDRESS_INVALID_STATE,
+        message: 'Invalid state',
+      };
+    }
+    if (!address.number?.trim()) {
+      throw {
+        status: 400,
+        errorCode: EErrorCode.ADDRESS_INVALID_NUMBER,
+        message: 'Invalid address number',
+      };
+    }
+  }
+
+  static validateProfile(profile: IUserProfile): void {
+    if (profile.occupationArea !== undefined) {
+      const occupationArea = profile.occupationArea.trim();
+      if (!occupationArea || occupationArea.length > 120) {
+        throw new Error('Occupation area must be between 1 and 120 characters');
+      }
+    }
+    if (
+      profile.investmentProfile !== undefined &&
+      !Object.values(EInvestmentProfile).includes(profile.investmentProfile)
+    ) {
+      throw new Error('Invalid investment profile');
+    }
+    if (
+      profile.livingSituation !== undefined &&
+      !Object.values(ELivingSituation).includes(profile.livingSituation)
+    ) {
+      throw new Error('Invalid living situation');
+    }
+    if (profile.address) {
+      UserServiceEntity.validateAddress(profile.address);
+    }
+  }
+
+  static normalizeAddress(address: IAddress): IAddress {
+    return {
+      zipCode: address.zipCode.replace(/\D/g, ''),
+      street: address.street.trim(),
+      neighborhood: address.neighborhood.trim(),
+      city: address.city.trim(),
+      state: address.state.trim().toUpperCase(),
+      number: address.number.trim(),
+      complement: address.complement?.trim() || undefined,
+    };
+  }
+
   private validateDocument(document: IDocument): void {
     UserServiceEntity.validateDocument(document);
   }
@@ -110,7 +195,7 @@ export class RegisterUserServiceEntity implements IUser {
 
   constructor(input: IRegisterUserInput & { passwordHash: string; id?: string }) {
     RegisterUserServiceEntity.validateRegisterInput(input);
-    this.id = input.id || new Types.ObjectId().toHexString();
+    this.id = input.id || generateId();
     this.name = input.name.trim();
     this.email = input.email.trim().toLowerCase();
     this.passwordHash = input.passwordHash;
@@ -138,7 +223,10 @@ export class RegisterUserServiceEntity implements IUser {
   }
 }
 
-export function toUserPublicProfile(user: IUser): Omit<IUser, 'passwordHash'> {
+export function toUserPublicProfile(user: IUser): IUserPublicProfile {
   const { passwordHash: _passwordHash, ...publicProfile } = user;
-  return publicProfile;
+  return {
+    ...publicProfile,
+    onboardingRequired: isOnboardingRequired(user.profile),
+  };
 }

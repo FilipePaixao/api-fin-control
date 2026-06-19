@@ -1,5 +1,6 @@
 import { IDocument } from './document.interface';
 import { ISalary } from './salary.interface';
+import { IUserProfile } from './user-profile.interface';
 
 export interface IUser {
   id: string;
@@ -9,6 +10,7 @@ export interface IUser {
   document?: IDocument;
   salary?: ISalary;
   age?: number;
+  profile?: IUserProfile;
   createdAt: Date;
   updatedAt?: Date;
 }
@@ -28,6 +30,8 @@ export interface IUserPublicProfile {
   document?: IDocument;
   salary?: ISalary;
   age?: number;
+  profile?: IUserProfile;
+  onboardingRequired?: boolean;
   createdAt: Date;
   updatedAt?: Date;
 }
