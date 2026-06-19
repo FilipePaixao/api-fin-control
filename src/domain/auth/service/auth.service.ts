@@ -1,5 +1,5 @@
 import { createHash } from 'crypto';
-import { Types } from 'mongoose';
+import { generateId } from '../../common/utils/generate-id';
 import { IThrowedError } from '@sauvvitech/st-packages';
 import { EErrorCode } from '../../common/errors/enums/EErrorCode';
 import { IUserRepositoryRead } from '../../user/repository/user.repository.read';
@@ -21,7 +21,10 @@ import {
   IParamsAuthService,
   IRefreshSessionParams,
   IRegisterUserParams,
+  IRegisterUserResult,
 } from '../interfaces/auth.service.interface';
+import { isOnboardingRequired } from '../../user/utils/user-profile.utils';
+import { EUserVerificationStatus } from '../../user/entity/enums/EUserVerificationStatus';
 
 export class AuthService implements IAuthService {
   private readonly userRepositoryRead: IUserRepositoryRead;
@@ -47,7 +50,7 @@ export class AuthService implements IAuthService {
     this.authTokenProvider = authTokenProvider;
   }
 
-  async registerUser(params: IRegisterUserParams) {
+  async registerUser(params: IRegisterUserParams): Promise<IRegisterUserResult> {
     const existingUserByEmail = await this.userRepositoryRead.findUserByEmail(
       params.email,
     );
@@ -90,8 +93,20 @@ export class AuthService implements IAuthService {
       age: params.age,
       passwordHash,
     });
-    const createdUser = await this.userRepositoryWrite.createUser(userEntity);
-    return toUserPublicProfile(createdUser);
+    const createdUser = await this.userRepositoryWrite.createUser({
+      ...userEntity,
+      profile: {
+        verificationStatus: EUserVerificationStatus.PENDING_ADDRESS,
+      },
+    });
+    const tokens = await this.issueAuthTokens(createdUser.id);
+    const user = toUserPublicProfile(createdUser);
+
+    return {
+      user,
+      ...tokens,
+      onboardingRequired: isOnboardingRequired(createdUser.profile),
+    };
   }
 
   async loginUser(params: ILoginUserParams): Promise<IAuthTokens> {
@@ -140,7 +155,7 @@ export class AuthService implements IAuthService {
     const tokenHash = this.hashRefreshToken(refreshTokenValue);
 
     const refreshTokenEntity: IRefreshToken = {
-      id: new Types.ObjectId().toHexString(),
+      id: generateId(),
       userId,
       tokenHash,
       expiresAt: this.authTokenProvider.getRefreshTokenExpiresAt(),

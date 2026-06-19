@@ -40,4 +40,10 @@ export interface IConversationService {
     userMessageContent: string,
     isFirstUserMessage: boolean,
   ): Promise<void>;
+  removeProposedAction(
+    userId: string,
+    conversationId: string,
+    actionId: string,
+  ): Promise<void>;
+  getOrCreateOnboardingConversation(userId: string): Promise<IConversation>;
 }
