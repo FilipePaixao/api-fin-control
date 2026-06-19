@@ -12,6 +12,8 @@ describe('When getting dashboard with authenticated user', () => {
         amount: 4000,
         currency: ECurrency.BRL,
         paymentDay: 5,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
     });
 

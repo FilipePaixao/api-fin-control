@@ -15,6 +15,8 @@ describe('When getting dashboard summary with persisted salary and expenses', ()
         amount: 7000,
         currency: ECurrency.BRL,
         paymentDay: 5,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
     });
     await UserModel.create(user);
