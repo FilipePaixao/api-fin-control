@@ -13,7 +13,7 @@ describe('When deleting expense by id through service from owner user', () => {
     const createdExpense = await createExpenseViaApi(owner.token, {
       name: 'Insurance',
       amount: 500,
-      category: EExpenseCategory.INSURANCE,
+      category: EExpenseCategory.HEALTH,
       referenceMonth: '2026-06',
     });
 
@@ -34,7 +34,7 @@ describe('When deleting expense by id through service from another user', () => 
     const createdExpense = await createExpenseViaApi(owner.token, {
       name: 'Insurance',
       amount: 500,
-      category: EExpenseCategory.INSURANCE,
+      category: EExpenseCategory.HEALTH,
       referenceMonth: '2026-06',
     });
 

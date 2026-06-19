@@ -11,7 +11,7 @@ describe('When deleting an expense by id from the owner user', () => {
     const createdExpense = await createExpenseViaApi(owner.token, {
       name: 'Car insurance',
       amount: 330,
-      category: EExpenseCategory.INSURANCE,
+      category: EExpenseCategory.HEALTH,
       referenceMonth: '2026-06',
     });
 
