@@ -32,6 +32,16 @@ export class UserController implements IController {
       this.authenticateMiddleware,
       this.updateSalary,
     );
+    this.router.put(
+      '/users/me/profile/address',
+      this.authenticateMiddleware,
+      this.updateProfileAddress,
+    );
+    this.router.get(
+      '/users/me/onboarding',
+      this.authenticateMiddleware,
+      this.getOnboardingStatus,
+    );
   }
 
   /**
@@ -78,7 +88,7 @@ export class UserController implements IController {
         id,
         name,
         email,
-        createdAt: createdAt ? new Date(createdAt) : new Date(),
+        createdAt: createdAt ? new Date(createdAt) : undefined,
       });
       res.status(201).json(newUser);
     } catch (error) {
@@ -130,6 +140,33 @@ export class UserController implements IController {
         source: req.body.source,
       });
       res.status(200).json(salary);
+    } catch (error) {
+      handleTranslatedError(error, ErrorCatalog, res);
+    }
+  };
+
+  updateProfileAddress = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const address = await this.userService.updateProfileAddress(req.userId!, {
+        zipCode: String(req.body.zipCode ?? ''),
+        street: String(req.body.street ?? ''),
+        neighborhood: String(req.body.neighborhood ?? ''),
+        city: String(req.body.city ?? ''),
+        state: String(req.body.state ?? ''),
+        number: String(req.body.number ?? ''),
+        complement:
+          typeof req.body.complement === 'string' ? req.body.complement : undefined,
+      });
+      res.status(200).json(address);
+    } catch (error) {
+      handleTranslatedError(error, ErrorCatalog, res);
+    }
+  };
+
+  getOnboardingStatus = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const status = await this.userService.getOnboardingStatus(req.userId!);
+      res.status(200).json(status);
     } catch (error) {
       handleTranslatedError(error, ErrorCatalog, res);
     }
