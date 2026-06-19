@@ -6,6 +6,7 @@ export function dbToInternal(conversation: IMConversation): IConversation {
     id: conversation.id,
     userId: conversation.userId,
     title: conversation.title,
+    type: conversation.type,
     createdAt: conversation.createdAt,
     updatedAt: conversation.updatedAt,
     lastMessageAt: conversation.lastMessageAt,
@@ -19,6 +20,7 @@ export function internalToDb(
     id: conversation.id,
     userId: conversation.userId,
     title: conversation.title,
+    type: conversation.type,
     lastMessageAt: conversation.lastMessageAt,
   };
 }
