@@ -228,7 +228,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserPublicProfile'
+                $ref: '#/components/schemas/RegisterUserResult'
         '400':
           description: Invalid request body
           content:
@@ -364,6 +364,219 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /api/users/me/profile/address:
+    put:
+      tags:
+        - Users
+      summary: Update authenticated user address
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileAddress'
+      responses:
+        '200':
+          description: Address updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+        '400':
+          description: Invalid address payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '401':
+          description: Missing or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/users/me/onboarding:
+    get:
+      tags:
+        - Users
+      summary: Get onboarding status for authenticated user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Onboarding status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardingStatus'
+        '401':
+          description: Missing or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/address/zip/{zipCode}:
+    get:
+      tags:
+        - Address
+      summary: Lookup address by zip code via ViaCEP
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: zipCode
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Address lookup result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddressLookupResult'
+        '400':
+          description: Invalid zip code
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '401':
+          description: Missing or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '404':
+          description: Zip code not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/agent/onboarding/chat:
+    post:
+      tags:
+        - Onboarding
+      summary: Chat with onboarding assistant
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OnboardingChatRequest'
+      responses:
+        '200':
+          description: Onboarding assistant response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentChatResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '401':
+          description: Missing or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '503':
+          description: AI assistant unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/agent/onboarding/actions/execute:
+    post:
+      tags:
+        - Onboarding
+      summary: Execute confirmed onboarding action
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExecuteAgentActionRequest'
+      responses:
+        '200':
+          description: Action executed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecuteAgentActionResponse'
+        '400':
+          description: Invalid action
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '401':
+          description: Missing or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /api/users/me/salary:
     put:
       tags:
@@ -467,6 +680,11 @@ paths:
           schema:
             type: string
             format: date-time
+        - name: search
+          in: query
+          schema:
+            type: string
+            minLength: 1
       responses:
         '200':
           description: User expenses
@@ -861,6 +1079,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TranslatedApiError'
+        '403':
+          description: Onboarding incomplete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
         '503':
           description: Ollama unavailable
           content:
@@ -1122,6 +1346,18 @@ components:
         expiresIn:
           type: integer
           description: Access token lifetime in seconds
+    RegisterUserResult:
+      allOf:
+        - $ref: '#/components/schemas/AuthTokens'
+        - type: object
+          required:
+            - user
+            - onboardingRequired
+          properties:
+            user:
+              $ref: '#/components/schemas/UserPublicProfile'
+            onboardingRequired:
+              type: boolean
     UserPublicProfile:
       type: object
       properties:
@@ -1135,12 +1371,144 @@ components:
           $ref: '#/components/schemas/Document'
         age:
           type: integer
+        profile:
+          $ref: '#/components/schemas/UserProfile'
+        onboardingRequired:
+          type: boolean
         createdAt:
           type: string
           format: date-time
         updatedAt:
           type: string
           format: date-time
+    Address:
+      type: object
+      required:
+        - zipCode
+        - street
+        - neighborhood
+        - city
+        - state
+        - number
+      properties:
+        zipCode:
+          type: string
+        street:
+          type: string
+        neighborhood:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        number:
+          type: string
+        complement:
+          type: string
+    AddressLookupResult:
+      type: object
+      required:
+        - zipCode
+        - street
+        - neighborhood
+        - city
+        - state
+      properties:
+        zipCode:
+          type: string
+        street:
+          type: string
+        neighborhood:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+    UpdateProfileAddress:
+      type: object
+      required:
+        - zipCode
+        - street
+        - neighborhood
+        - city
+        - state
+        - number
+      properties:
+        zipCode:
+          type: string
+        street:
+          type: string
+        neighborhood:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        number:
+          type: string
+        complement:
+          type: string
+    UserProfile:
+      type: object
+      properties:
+        occupationArea:
+          type: string
+          maxLength: 120
+        investmentProfile:
+          type: string
+          enum: [CONSERVATIVE, MODERATE, AGGRESSIVE]
+        livingSituation:
+          type: string
+          enum: [ALONE, WITH_PARENTS, WITH_PARTNER, WITH_ROOMMATES, OTHER]
+        address:
+          $ref: '#/components/schemas/Address'
+        onboardingCompletedAt:
+          type: string
+          format: date-time
+        verificationStatus:
+          type: string
+          enum:
+            - PENDING_ADDRESS
+            - PENDING_OCCUPATION
+            - PENDING_INVESTMENT_PROFILE
+            - PENDING_LIVING_SITUATION
+            - READY_TO_COMPLETE
+            - COMPLETED
+    OnboardingStatus:
+      type: object
+      required:
+        - completed
+        - verificationStatus
+        - missingFields
+      properties:
+        completed:
+          type: boolean
+        verificationStatus:
+          type: string
+          enum:
+            - PENDING_ADDRESS
+            - PENDING_OCCUPATION
+            - PENDING_INVESTMENT_PROFILE
+            - PENDING_LIVING_SITUATION
+            - READY_TO_COMPLETE
+            - COMPLETED
+        currentField:
+          type: string
+          enum: [address, occupationArea, investmentProfile, livingSituation]
+        missingFields:
+          type: array
+          items:
+            type: string
+            enum: [address, occupationArea, investmentProfile, livingSituation]
+        onboardingConversationId:
+          type: string
+    OnboardingChatRequest:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
     Salary:
       type: object
       properties:
@@ -1486,7 +1854,7 @@ components:
           type: string
         type:
           type: string
-          enum: [CREATE_EXPENSE, UPDATE_SALARY]
+          enum: [CREATE_EXPENSE, UPDATE_SALARY, UPDATE_PROFILE, COMPLETE_ONBOARDING]
         summary:
           type: string
         payload:
@@ -1514,7 +1882,7 @@ components:
       properties:
         type:
           type: string
-          enum: [CREATE_EXPENSE, UPDATE_SALARY]
+          enum: [CREATE_EXPENSE, UPDATE_SALARY, UPDATE_PROFILE, COMPLETE_ONBOARDING]
         payload:
           type: object
           additionalProperties: true
