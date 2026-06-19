@@ -1,4 +1,3 @@
-import '../../../jest/setup-integration-tests';
 import { UserRepositoryRead } from '../../../../../infraestructure/repository/user/user.repository.read';
 import { UserRepositoryWrite } from '../../../../../infraestructure/repository/user/user.repository.write';
 import { EDocumentType } from '../../../../../domain/user/entity/enums/EDocumentType';

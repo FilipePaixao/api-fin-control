@@ -1,10 +1,10 @@
 import { Types } from 'mongoose';
-import { EDocumentType } from '../../../domain/user/entity/enums/EDocumentType';
-import { ECurrency } from '../../../domain/user/entity/enums/ECurrency';
+import { EDocumentType } from '../../../../domain/user/entity/enums/EDocumentType';
+import { ECurrency } from '../../../../domain/user/entity/enums/ECurrency';
 import {
   RegisterUserServiceEntity,
   UserServiceEntity,
-} from '../../../domain/user/entity/user.entity';
+} from '../../../../domain/user/entity/user.entity';
 
 describe('when validating user entity', () => {
   const baseUser = {

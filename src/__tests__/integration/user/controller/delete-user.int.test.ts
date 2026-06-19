@@ -11,7 +11,7 @@ describe('When we try to delete a user', () => {
     await UserModel.create(userData);
 
     const { body, statusCode } = await supertest(app.app).delete(
-      `/users/${userData.id}`,
+      `/api/users/${userData.id}`,
     );
 
     expect(statusCode).toBe(200);
@@ -23,7 +23,7 @@ describe('When we try to delete a user', () => {
 
   it('should return 404 when the user does not exist', async () => {
     const { body, statusCode } = await supertest(app.app).delete(
-      '/users/nonexistent-id',
+      '/api/users/nonexistent-id',
     );
 
     expect(statusCode).toBe(404);

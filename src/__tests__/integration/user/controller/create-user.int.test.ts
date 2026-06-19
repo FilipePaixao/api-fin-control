@@ -34,11 +34,12 @@ describe('When we create a user with a valid payload', () => {
 
 describe('When we create a user with a duplicate email', () => {
   it('Should reject with RESOURCE_CONFLICT', async () => {
-    await UserModel.create(paramsCreate);
+    const existingUser = validUserMock({ email: 'duplicate.user@email.com' });
+    await UserModel.create(existingUser);
 
     const { statusCode } = await supertest(app.app)
       .post('/api/users')
-      .send(validUserMock({ email: paramsCreate.email }));
+      .send(validUserMock({ email: existingUser.email }));
 
     expect(statusCode).toBe(409);
   });
