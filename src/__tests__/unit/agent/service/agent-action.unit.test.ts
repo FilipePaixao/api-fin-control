@@ -4,6 +4,7 @@ import { EExpenseStatus } from '../../../../domain/expense/entity/enums/EExpense
 import { ECurrency } from '../../../../domain/user/entity/enums/ECurrency';
 import { EAgentActionType } from '../../../../domain/agent/entity/enums/EAgentActionType';
 import { AgentActionService } from '../../../../domain/agent/service/agent-action.service';
+import { IConversationService } from '../../../../domain/agent/interfaces/conversation.service.interface';
 import { IExpenseService } from '../../../../domain/expense/interfaces/expense.service.interface';
 import { IRagService } from '../../../../domain/rag/interfaces/rag.service.interface';
 import { IUserService } from '../../../../domain/user/interfaces/user.service.interface';
@@ -32,6 +33,10 @@ function createUserServiceMock(override: Partial<IUserService> = {}): IUserServi
     listUsers: jest.fn(),
     updateSalary: jest.fn(),
     getAuthenticatedProfile: jest.fn(),
+    updateProfileAddress: jest.fn(),
+    updateProfile: jest.fn(),
+    getOnboardingStatus: jest.fn(),
+    completeOnboarding: jest.fn(),
     ...override,
   };
 }
@@ -39,7 +44,29 @@ function createUserServiceMock(override: Partial<IUserService> = {}): IUserServi
 function createRagServiceMock(override: Partial<IRagService> = {}): IRagService {
   return {
     syncUserFinancialContext: jest.fn(),
+    syncExpense: jest.fn(),
+    removeExpense: jest.fn(),
+    searchExpenses: jest.fn(),
     askFinancialQuestion: jest.fn(),
+    ...override,
+  };
+}
+
+function createConversationServiceMock(
+  override: Partial<IConversationService> = {},
+): IConversationService {
+  return {
+    createConversation: jest.fn(),
+    listConversations: jest.fn(),
+    getConversationWithMessages: jest.fn(),
+    renameConversation: jest.fn(),
+    deleteConversation: jest.fn(),
+    appendMessage: jest.fn(),
+    getRecentMessages: jest.fn(),
+    assertConversationOwnership: jest.fn(),
+    updateConversationAfterMessage: jest.fn(),
+    removeProposedAction: jest.fn(),
+    getOrCreateOnboardingConversation: jest.fn(),
     ...override,
   };
 }
@@ -62,6 +89,7 @@ describe('When executing CREATE_EXPENSE action in AgentActionService', () => {
       expenseService,
       userService: createUserServiceMock(),
       ragService,
+      conversationService: createConversationServiceMock(),
     });
 
     const result = await service.executeAction('user-1', {
@@ -77,6 +105,45 @@ describe('When executing CREATE_EXPENSE action in AgentActionService', () => {
     expect(result.success).toBe(true);
     expect(expenseService.createExpense).toHaveBeenCalled();
     expect(ragService.syncUserFinancialContext).toHaveBeenCalledWith('user-1');
+  });
+
+  it('Should remove proposed action metadata when conversation and action ids are provided', async () => {
+    const expenseService = createExpenseServiceMock({
+      createExpense: jest.fn().mockResolvedValue({
+        id: 'exp-1',
+        name: 'Mercado',
+        amount: 150,
+        category: EExpenseCategory.FOOD,
+        referenceMonth: '2026-06',
+        status: EExpenseStatus.PENDING,
+      }),
+    });
+    const conversationService = createConversationServiceMock();
+
+    const service = new AgentActionService({
+      expenseService,
+      userService: createUserServiceMock(),
+      ragService: createRagServiceMock(),
+      conversationService,
+    });
+
+    await service.executeAction('user-1', {
+      type: EAgentActionType.CREATE_EXPENSE,
+      conversationId: 'conv-1',
+      actionId: 'action-1',
+      payload: {
+        name: 'Mercado',
+        amount: 150,
+        category: EExpenseCategory.FOOD,
+        referenceMonth: '2026-06',
+      },
+    });
+
+    expect(conversationService.removeProposedAction).toHaveBeenCalledWith(
+      'user-1',
+      'conv-1',
+      'action-1',
+    );
   });
 });
 
@@ -97,6 +164,7 @@ describe('When executing UPDATE_SALARY action in AgentActionService', () => {
       expenseService: createExpenseServiceMock(),
       userService,
       ragService,
+      conversationService: createConversationServiceMock(),
     });
 
     const result = await service.executeAction('user-1', {
@@ -120,6 +188,7 @@ describe('When executing action with invalid expense payload in AgentActionServi
       expenseService: createExpenseServiceMock(),
       userService: createUserServiceMock(),
       ragService: createRagServiceMock(),
+      conversationService: createConversationServiceMock(),
     });
 
     await expect(
@@ -140,6 +209,7 @@ describe('When executing action with invalid type in AgentActionService', () => 
       expenseService: createExpenseServiceMock(),
       userService: createUserServiceMock(),
       ragService: createRagServiceMock(),
+      conversationService: createConversationServiceMock(),
     });
 
     await expect(
@@ -157,6 +227,7 @@ describe('When executing action with invalid payload in AgentActionService', () 
       expenseService: createExpenseServiceMock(),
       userService: createUserServiceMock(),
       ragService: createRagServiceMock(),
+      conversationService: createConversationServiceMock(),
     });
 
     await expect(
