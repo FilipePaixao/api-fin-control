@@ -5,6 +5,7 @@ import {
   IVectorSearchResult,
   IVectorStoreRepository,
   IVectorDocument,
+  IVectorSearchFilter,
 } from '../../../domain/rag/repository/vector-store.repository';
 import { runPostgresQuery } from '../../db/postgres/postgres.client';
 
@@ -17,12 +18,15 @@ export class PgVectorStoreRepository implements IVectorStoreRepository {
     try {
       await runPostgresQuery(
         `INSERT INTO financial_embeddings
-          (id, user_id, source_type, source_id, content, metadata, embedding, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7::vector, $8, $9)
+          (id, user_id, source_type, source_id, content, metadata, reference_month, category, status, embedding, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::vector, $11, $12)
         ON CONFLICT (user_id, source_type, source_id)
         DO UPDATE SET
           content = EXCLUDED.content,
           metadata = EXCLUDED.metadata,
+          reference_month = EXCLUDED.reference_month,
+          category = EXCLUDED.category,
+          status = EXCLUDED.status,
           embedding = EXCLUDED.embedding,
           updated_at = EXCLUDED.updated_at`,
         [
@@ -32,6 +36,9 @@ export class PgVectorStoreRepository implements IVectorStoreRepository {
           document.sourceId,
           document.content,
           document.metadata || {},
+          document.referenceMonth ?? null,
+          document.category ?? null,
+          document.status ?? null,
           formatVector(embedding),
           document.createdAt,
           new Date(),
@@ -57,8 +64,37 @@ export class PgVectorStoreRepository implements IVectorStoreRepository {
     userId: string,
     embedding: number[],
     limit: number,
+    filter?: IVectorSearchFilter,
   ): Promise<IVectorSearchResult[]> {
     try {
+      const conditions = ['user_id = $1'];
+      const values: unknown[] = [userId, formatVector(embedding)];
+      let paramIndex = 3;
+
+      if (filter?.sourceType) {
+        conditions.push(`source_type = $${paramIndex}`);
+        values.push(filter.sourceType);
+        paramIndex += 1;
+      }
+      if (filter?.referenceMonth) {
+        conditions.push(`reference_month = $${paramIndex}`);
+        values.push(filter.referenceMonth);
+        paramIndex += 1;
+      }
+      if (filter?.category) {
+        conditions.push(`category = $${paramIndex}`);
+        values.push(filter.category);
+        paramIndex += 1;
+      }
+      if (filter?.status) {
+        conditions.push(`status = $${paramIndex}`);
+        values.push(filter.status);
+        paramIndex += 1;
+      }
+
+      values.push(limit);
+      const limitParam = `$${paramIndex}`;
+
       const result = await runPostgresQuery<{
         id: string;
         user_id: string;
@@ -79,10 +115,10 @@ export class PgVectorStoreRepository implements IVectorStoreRepository {
           created_at,
           (1 - (embedding <=> $2::vector))::float AS score
         FROM financial_embeddings
-        WHERE user_id = $1
+        WHERE ${conditions.join(' AND ')}
         ORDER BY embedding <=> $2::vector
-        LIMIT $3`,
-        [userId, formatVector(embedding), limit],
+        LIMIT ${limitParam}`,
+        values,
       );
 
       return result.rows.map((row) => ({

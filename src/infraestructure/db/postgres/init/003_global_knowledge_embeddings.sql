@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS global_knowledge_embeddings (
   source_type TEXT NOT NULL,
   content TEXT NOT NULL,
   metadata JSONB,
-  embedding vector(1536) NOT NULL,
+  embedding vector(768) NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

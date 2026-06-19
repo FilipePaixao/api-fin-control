@@ -7,7 +7,10 @@ CREATE TABLE IF NOT EXISTS financial_embeddings (
   source_id TEXT NOT NULL,
   content TEXT NOT NULL,
   metadata JSONB,
-  embedding vector(1536) NOT NULL,
+  reference_month TEXT,
+  category TEXT,
+  status TEXT,
+  embedding vector(768) NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (user_id, source_type, source_id)
