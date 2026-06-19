@@ -1,6 +1,14 @@
 import { Schema } from 'mongoose';
 import { EDocumentType } from '../../../../domain/user/entity/enums/EDocumentType';
 import { ECurrency } from '../../../../domain/user/entity/enums/ECurrency';
+import { EInvestmentProfile } from '../../../../domain/user/entity/enums/EInvestmentProfile';
+import { ELivingSituation } from '../../../../domain/user/entity/enums/ELivingSituation';
+import { EUserVerificationStatus } from '../../../../domain/user/entity/enums/EUserVerificationStatus';
+import { IUserProfile } from '../../../../domain/user/entity/interfaces/user-profile.interface';
+import {
+  resolveVerificationStatus,
+  validateProfileForVerificationStatus,
+} from '../../../../domain/user/utils/user-verification-state.utils';
 import type { IMUser } from '../models/user.model';
 
 const DocumentSchema = new Schema(
@@ -33,6 +41,55 @@ const SalarySchema = new Schema(
   },
   { _id: false },
 );
+
+const AddressSchema = new Schema(
+  {
+    zipCode: { type: String, required: true },
+    street: { type: String, required: true },
+    neighborhood: { type: String, required: true },
+    city: { type: String, required: true },
+    state: { type: String, required: true },
+    number: { type: String, required: true },
+    complement: { type: String },
+  },
+  { _id: false },
+);
+
+const UserProfileSchema = new Schema(
+  {
+    occupationArea: { type: String, maxlength: 120 },
+    investmentProfile: {
+      type: String,
+      enum: Object.values(EInvestmentProfile),
+    },
+    livingSituation: {
+      type: String,
+      enum: Object.values(ELivingSituation),
+    },
+    address: { type: AddressSchema },
+    onboardingCompletedAt: { type: Date },
+    verificationStatus: {
+      type: String,
+      enum: Object.values(EUserVerificationStatus),
+      default: EUserVerificationStatus.PENDING_ADDRESS,
+    },
+  },
+  { _id: false },
+);
+
+UserProfileSchema.pre('validate', function (next) {
+  try {
+    const profile = this.toObject() as IUserProfile;
+    const status = resolveVerificationStatus(profile);
+    validateProfileForVerificationStatus({
+      ...profile,
+      verificationStatus: status,
+    });
+    next();
+  } catch (error) {
+    next(error instanceof Error ? error : new Error(String(error)));
+  }
+});
 
 export const UserSchema = new Schema<IMUser>(
   {
@@ -69,6 +126,9 @@ export const UserSchema = new Schema<IMUser>(
       type: Number,
       min: 0,
       max: 150,
+    },
+    profile: {
+      type: UserProfileSchema,
     },
   },
   { timestamps: true },
