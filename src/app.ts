@@ -12,6 +12,8 @@ import { ExpenseControllerFactory } from './configuration/factory/expense.contro
 import { DashboardControllerFactory } from './configuration/factory/dashboard.controller.factory';
 import { RagControllerFactory } from './configuration/factory/rag.controller.factory';
 import { AgentControllerFactory } from './configuration/factory/agent.controller.factory';
+import { AddressControllerFactory } from './configuration/factory/address.controller.factory';
+import { OnboardingControllerFactory } from './configuration/factory/onboarding.controller.factory';
 
 validateEnv();
 
@@ -29,6 +31,8 @@ const app = new Server({
     DashboardControllerFactory.create(),
     RagControllerFactory.create(),
     AgentControllerFactory.create(),
+    AddressControllerFactory.create(),
+    OnboardingControllerFactory.create(),
   ],
   databaseURI: DATABASE_URI,
   apiSpecLocation: OPEN_API_SPEC_FILE_LOCATION,
