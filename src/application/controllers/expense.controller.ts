@@ -52,6 +52,7 @@ export class ExpenseController implements IController {
         referenceMonth: req.query.referenceMonth as string | undefined,
         from: req.query.from ? new Date(String(req.query.from)) : undefined,
         to: req.query.to ? new Date(String(req.query.to)) : undefined,
+        search: req.query.search ? String(req.query.search) : undefined,
       });
       res.status(200).json(expenses);
     } catch (error) {
