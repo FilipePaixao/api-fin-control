@@ -10,7 +10,7 @@ describe('When we try to list all users', () => {
     await UserModel.create(userData);
 
     const { body, statusCode } = await supertest(app.app)
-      .get('/users')
+      .get('/api/users')
       .set('x-user-groups', EUserGroup.BACKOFFICE);
 
     expect(statusCode).toBe(200);

@@ -11,7 +11,7 @@ describe('When we try to get a user by id', () => {
     await UserModel.create(userData);
 
     const { body, statusCode } = await supertest(app.app).get(
-      `/users/${userData.id}`,
+      `/api/users/${userData.id}`,
     );
 
     expect(statusCode).toBe(200);
@@ -24,7 +24,7 @@ describe('When we try to get a user by id', () => {
 
   it('should return 404 when the user does not exist', async () => {
     const { body, statusCode } = await supertest(app.app).get(
-      '/users/nonexistent-id',
+      '/api/users/nonexistent-id',
     );
 
     expect(statusCode).toBe(404);

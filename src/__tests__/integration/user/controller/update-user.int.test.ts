@@ -11,7 +11,7 @@ describe('When we try to update a user', () => {
     await UserModel.create(userData);
 
     const { body, statusCode } = await supertest(app.app)
-      .put(`/users/${userData.id}`)
+      .put(`/api/users/${userData.id}`)
       .send({ name: 'Updated Name' });
 
     expect(statusCode).toBe(200);
@@ -22,7 +22,7 @@ describe('When we try to update a user', () => {
 
   it('should return 404 when the user does not exist', async () => {
     const { body, statusCode } = await supertest(app.app)
-      .put('/users/nonexistent-id')
+      .put('/api/users/nonexistent-id')
       .send({ name: 'Updated' });
 
     expect(statusCode).toBe(404);

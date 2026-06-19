@@ -27,6 +27,45 @@ describe('When updating a user by id that exists', () => {
       name: 'Updated Name',
     });
   });
+
+  it('Should merge partial profile with existing profile before persisting', async () => {
+    const userData = validUserMock({
+      profile: {
+        address: {
+          zipCode: '01310100',
+          street: 'Avenida Paulista',
+          neighborhood: 'Bela Vista',
+          city: 'São Paulo',
+          state: 'SP',
+          number: '100',
+        },
+      },
+    });
+    const userRepositoryRead = createUserRepositoryReadMock({
+      findUserById: jest.fn().mockResolvedValue(userData),
+    });
+    const userRepositoryWrite = createUserRepositoryWriteMock({
+      updateUserById: jest.fn().mockImplementation((_id, data) =>
+        Promise.resolve({ ...userData, ...data }),
+      ),
+    });
+    const userService = new UserService({ userRepositoryRead, userRepositoryWrite });
+
+    await userService.updateUserById(userData.id, {
+      userData: {
+        profile: {
+          occupationArea: 'Tecnologia',
+        },
+      },
+    });
+
+    expect(userRepositoryWrite.updateUserById).toHaveBeenCalledWith(userData.id, {
+      profile: {
+        address: userData.profile?.address,
+        occupationArea: 'Tecnologia',
+      },
+    });
+  });
 });
 
 describe('When updating a user by id that does not exist', () => {
