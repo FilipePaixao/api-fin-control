@@ -2,24 +2,27 @@ import { IThrowedError, serviceLogErrorHandler } from '@sauvvitech/st-packages';
 import { EErrorCode } from '../../../domain/common/errors/enums/EErrorCode';
 import { EChatMessageRole } from '../../../domain/agent/entity/enums/EChatMessageRole';
 import { IChatMessage } from '../../../domain/agent/entity/interfaces/chat-message.interface';
-import { IChatMessageRepositoryRead } from '../../../domain/agent/repository/chat-message.repository.read';
+import {
+  IChatMessageListOptions,
+  IChatMessageRepositoryRead,
+} from '../../../domain/agent/repository/chat-message.repository.read';
 import { ChatMessageModel } from '../../db/mongo/models/chat-message.model';
 import { dbToInternal } from './adapters/chat-message.adapter';
 
 export class ChatMessageRepositoryRead implements IChatMessageRepositoryRead {
   async listMessagesByConversationId(
     conversationId: string,
-    limit?: number,
+    options?: IChatMessageListOptions,
   ): Promise<IChatMessage[]> {
     try {
       let query = ChatMessageModel.find({ conversationId }).sort({ createdAt: 1 });
 
-      if (limit !== undefined && limit > 0) {
-        const totalCount = await ChatMessageModel.countDocuments({ conversationId });
-        const skipCount = Math.max(0, totalCount - limit);
-        query = ChatMessageModel.find({ conversationId })
-          .sort({ createdAt: 1 })
-          .skip(skipCount);
+      if (options?.skip !== undefined) {
+        query = query.skip(options.skip);
+      }
+
+      if (options?.limit !== undefined && options.limit > 0) {
+        query = query.limit(options.limit);
       }
 
       const messages = await query;
@@ -27,7 +30,22 @@ export class ChatMessageRepositoryRead implements IChatMessageRepositoryRead {
     } catch (error: any) {
       serviceLogErrorHandler(error, {
         eventName: 'ChatMessageRepositoryRead.listMessagesByConversationId',
-        eventData: { conversationId, limit },
+        eventData: { conversationId, options },
+      });
+      throw {
+        status: 500,
+        errorCode: EErrorCode.DATABASE_ERROR,
+      } as IThrowedError;
+    }
+  }
+
+  async countMessagesByConversationId(conversationId: string): Promise<number> {
+    try {
+      return ChatMessageModel.countDocuments({ conversationId });
+    } catch (error: any) {
+      serviceLogErrorHandler(error, {
+        eventName: 'ChatMessageRepositoryRead.countMessagesByConversationId',
+        eventData: { conversationId },
       });
       throw {
         status: 500,

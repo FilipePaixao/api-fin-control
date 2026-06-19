@@ -1,6 +1,7 @@
 import {
   OLLAMA_BASE_URL,
   OLLAMA_MODEL,
+  OLLAMA_NUM_CTX,
   OLLAMA_TIMEOUT_MS,
 } from '../../configuration/env-constants/env.constants';
 import {
@@ -31,15 +32,18 @@ export class OllamaLlmProvider implements ILlmProvider {
   private readonly baseUrl: string;
   private readonly model: string;
   private readonly timeoutMs: number;
+  private readonly numCtx: number;
 
   constructor(
     baseUrl = OLLAMA_BASE_URL,
     model = OLLAMA_MODEL,
     timeoutMs = OLLAMA_TIMEOUT_MS,
+    numCtx = OLLAMA_NUM_CTX,
   ) {
     this.baseUrl = baseUrl.replace(/\/$/, '');
     this.model = model;
     this.timeoutMs = timeoutMs;
+    this.numCtx = numCtx;
   }
 
   async chat(request: ILlmChatRequest): Promise<ILlmChatResponse> {
@@ -61,6 +65,7 @@ export class OllamaLlmProvider implements ILlmProvider {
               parameters: tool.parameters,
             },
           })),
+          options: { num_ctx: this.numCtx },
           stream: false,
         }),
         signal: controller.signal,

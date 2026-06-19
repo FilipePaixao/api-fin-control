@@ -1,6 +1,7 @@
 import { IThrowedError, serviceLogErrorHandler } from '@sauvvitech/st-packages';
 import { EErrorCode } from '../../../domain/common/errors/enums/EErrorCode';
 import { IChatMessage } from '../../../domain/agent/entity/interfaces/chat-message.interface';
+import { IProposedAction } from '../../../domain/agent/interfaces/agent.service.interface';
 import { IChatMessageRepositoryWrite } from '../../../domain/agent/repository/chat-message.repository.write';
 import { ChatMessageModel } from '../../db/mongo/models/chat-message.model';
 import { dbToInternal, internalToDb } from './adapters/chat-message.adapter';
@@ -52,6 +53,24 @@ export class ChatMessageRepositoryWrite implements IChatMessageRepositoryWrite {
       serviceLogErrorHandler(error, {
         eventName: 'ChatMessageRepositoryWrite.markMessagesIndexedForTraining',
         eventData: { messageIdsCount: messageIds.length },
+      });
+      throw {
+        status: 500,
+        errorCode: EErrorCode.DATABASE_ERROR,
+      } as IThrowedError;
+    }
+  }
+
+  async updateMessageProposedActions(
+    messageId: string,
+    proposedActions?: IProposedAction[],
+  ): Promise<void> {
+    try {
+      await ChatMessageModel.updateOne({ id: messageId }, { proposedActions });
+    } catch (error: any) {
+      serviceLogErrorHandler(error, {
+        eventName: 'ChatMessageRepositoryWrite.updateMessageProposedActions',
+        eventData: { messageId },
       });
       throw {
         status: 500,
