@@ -58,14 +58,25 @@ describe('When registering user with a valid payload in AuthService', () => {
     const passwordHasher = createPasswordHasherMock({
       hash: jest.fn().mockResolvedValue('hashed-password'),
     });
+    const expiresAt = new Date(Date.now() + 3_600_000);
+
+    const refreshTokenRepositoryWrite = createRefreshTokenRepositoryWriteMock({
+      createRefreshToken: jest.fn().mockResolvedValue(undefined),
+    });
 
     const authService = new AuthService({
       userRepositoryRead,
       userRepositoryWrite,
       refreshTokenRepositoryRead: createRefreshTokenRepositoryReadMock(),
-      refreshTokenRepositoryWrite: createRefreshTokenRepositoryWriteMock(),
+      refreshTokenRepositoryWrite,
       passwordHasher,
-      authTokenProvider: createAuthTokenProviderMock(),
+      authTokenProvider: createAuthTokenProviderMock({
+        generateAccessToken: jest
+          .fn()
+          .mockReturnValue({ token: 'access-token', expiresIn: 3600 }),
+        generateRefreshTokenValue: jest.fn().mockReturnValue('refresh-token-value'),
+        getRefreshTokenExpiresAt: jest.fn().mockReturnValue(expiresAt),
+      }),
     });
 
     const registeredUser = await authService.registerUser({
@@ -76,12 +87,20 @@ describe('When registering user with a valid payload in AuthService', () => {
     });
 
     expect(passwordHasher.hash).toHaveBeenCalledWith('StrongPassword123');
+    expect(refreshTokenRepositoryWrite.createRefreshToken).toHaveBeenCalled();
     expect(registeredUser).toMatchObject({
-      id: 'user-id',
-      name: 'Test User',
-      email: 'test@email.com',
-      createdAt,
+      user: {
+        id: 'user-id',
+        name: 'Test User',
+        email: 'test@email.com',
+        createdAt,
+        onboardingRequired: true,
+      },
+      accessToken: 'access-token',
+      refreshToken: 'refresh-token-value',
+      expiresIn: 3600,
+      onboardingRequired: true,
     });
-    expect((registeredUser as { passwordHash?: string }).passwordHash).toBeUndefined();
+    expect((registeredUser.user as { passwordHash?: string }).passwordHash).toBeUndefined();
   });
 });

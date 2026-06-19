@@ -23,11 +23,18 @@ describe('when registering a user via auth', () => {
 
     expect(statusCode).toBe(201);
     expect(body).toMatchObject({
-      name: registerPayload.name,
-      email: registerPayload.email,
-      document: registerPayload.document,
+      user: {
+        name: registerPayload.name,
+        email: registerPayload.email,
+        document: registerPayload.document,
+        onboardingRequired: true,
+      },
+      accessToken: expect.any(String),
+      refreshToken: expect.any(String),
+      expiresIn: expect.any(Number),
+      onboardingRequired: true,
     });
-    expect(body.passwordHash).toBeUndefined();
+    expect(body.user.passwordHash).toBeUndefined();
     expect(userInDatabase?.passwordHash).toBeDefined();
     expect(userInDatabase?.passwordHash).not.toBe(registerPayload.password);
   });

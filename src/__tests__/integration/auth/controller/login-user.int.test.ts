@@ -28,9 +28,10 @@ describe('when logging in via auth', () => {
     expect(body.refreshToken).toBeDefined();
     expect(body.expiresIn).toBeGreaterThan(0);
     expect(storedTokens.length).toBeGreaterThan(0);
-    expect(storedTokens[0].tokenHash).toBe(
-      createHash('sha256').update(body.refreshToken).digest('hex'),
-    );
+    expect(storedTokens.some(
+      (token) =>
+        token.tokenHash === createHash('sha256').update(body.refreshToken).digest('hex'),
+    )).toBe(true);
   });
 
   it('should return unauthorized for invalid password', async () => {
