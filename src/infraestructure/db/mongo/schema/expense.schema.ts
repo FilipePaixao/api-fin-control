@@ -29,4 +29,4 @@ export const ExpenseSchema = new Schema<IMExpense>(
 ExpenseSchema.index({ userId: 1, dueDate: -1 });
 ExpenseSchema.index({ userId: 1, category: 1 });
 ExpenseSchema.index({ userId: 1, status: 1 });
-ExpenseSchema.index({ userId: 1, referenceMonth: 1 });
+ExpenseSchema.index({ userId: 1, referenceMonth: 1, status: 1, category: 1 });

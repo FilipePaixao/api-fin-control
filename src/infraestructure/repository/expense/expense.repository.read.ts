@@ -25,6 +25,29 @@ export class ExpenseRepositoryRead implements IExpenseRepositoryRead {
     }
   }
 
+  async findExpensesByIds(userId: string, ids: string[]): Promise<IExpense[]> {
+    if (!ids.length) {
+      return [];
+    }
+
+    try {
+      const expenses = await ExpenseModel.find({
+        userId,
+        id: { $in: ids },
+      });
+      return expenses.map(dbToInternal);
+    } catch (error: any) {
+      serviceLogErrorHandler(error, {
+        eventName: 'ExpenseRepositoryRead.findExpensesByIds',
+        eventData: { userId, ids },
+      });
+      throw {
+        status: 500,
+        errorCode: EErrorCode.DATABASE_ERROR,
+      } as IThrowedError;
+    }
+  }
+
   async listExpenses(filter: IExpenseReadFilter): Promise<IExpense[]> {
     try {
       const query: Record<string, unknown> = { userId: filter.userId };
