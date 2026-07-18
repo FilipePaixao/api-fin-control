@@ -16,7 +16,7 @@ Read [docs/architecture-and-layers.md](../../../docs/architecture-and-layers.md)
 | Layer | Does | Does not |
 |--------|-----|---------|
 | **Repository** | Returns `null` if not found; on DB failure throws `DATABASE_ERROR` (500) | Throw product 404 |
-| **Service** | Interprets `null`, validates rules; throws 404/409 with `EErrorCode` | Access `AppointmentModel` / Mongo |
+| **Service** | Interprets `null`, validates rules; throws 404/409 with `EErrorCode` | Access `ExpenseModel` / Mongo |
 | **Controller** | `handleTranslatedError(error, ErrorCatalog, res)` | Translate messages manually |
 
 ## Flow for a new error code
