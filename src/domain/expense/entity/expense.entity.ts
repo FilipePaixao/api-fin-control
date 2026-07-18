@@ -21,6 +21,10 @@ export class ExpenseServiceEntity implements IExpense {
   dueDate?: Date;
   paidAt?: Date;
   referenceMonth: string;
+  installmentGroupId?: string;
+  installmentNumber?: number;
+  totalInstallments?: number;
+  totalAmount?: number;
   createdAt: Date;
   updatedAt: Date;
 
@@ -40,6 +44,10 @@ export class ExpenseServiceEntity implements IExpense {
     this.dueDate = expense.dueDate;
     this.paidAt = 'paidAt' in expense ? expense.paidAt : undefined;
     this.referenceMonth = expense.referenceMonth;
+    this.installmentGroupId = expense.installmentGroupId;
+    this.installmentNumber = expense.installmentNumber;
+    this.totalInstallments = expense.totalInstallments;
+    this.totalAmount = expense.totalAmount;
     this.createdAt =
       'createdAt' in expense && expense.createdAt
         ? expense.createdAt
