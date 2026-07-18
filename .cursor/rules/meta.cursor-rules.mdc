@@ -1,9 +1,8 @@
 ---
 description: Guidelines for creating and maintaining Cursor rules to ensure consistency and effectiveness.
-globs: .cursor/rules/*.mdc
-alwaysApply: true
+globs: .cursor/rules/**/*
+alwaysApply: false
 ---
-
 - **Required Rule Structure:**
   ```markdown
   ---
