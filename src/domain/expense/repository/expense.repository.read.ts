@@ -9,10 +9,15 @@ export interface IExpenseReadFilter {
   referenceMonth?: string;
   from?: Date;
   to?: Date;
+  installmentGroupId?: string;
 }
 
 export interface IExpenseRepositoryRead {
   findExpenseById(id: string): Promise<IExpense | null>;
   findExpensesByIds(userId: string, ids: string[]): Promise<IExpense[]>;
   listExpenses(filter: IExpenseReadFilter): Promise<IExpense[]>;
+  listExpensesByInstallmentGroupId(
+    userId: string,
+    installmentGroupId: string,
+  ): Promise<IExpense[]>;
 }
