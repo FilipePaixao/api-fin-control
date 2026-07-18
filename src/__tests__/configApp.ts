@@ -5,6 +5,7 @@ import { AgentControllerFactory } from '../configuration/factory/agent.controlle
 import { AuthControllerFactory } from '../configuration/factory/auth.controller.factory';
 import { DashboardControllerFactory } from '../configuration/factory/dashboard.controller.factory';
 import { ExpenseControllerFactory } from '../configuration/factory/expense.controller.factory';
+import { IncomeControllerFactory } from '../configuration/factory/income.controller.factory';
 import { OnboardingControllerFactory } from '../configuration/factory/onboarding.controller.factory';
 import { RagControllerFactory } from '../configuration/factory/rag.controller.factory';
 import { UserControllerFactory } from '../configuration/factory/user.controller.factory';
@@ -20,6 +21,7 @@ export const app = new Server({
     UserControllerFactory.create(),
     AuthControllerFactory.create(),
     ExpenseControllerFactory.create(),
+    IncomeControllerFactory.create(),
     DashboardControllerFactory.create(),
     RagControllerFactory.create(),
     AgentControllerFactory.create(),
