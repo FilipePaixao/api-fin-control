@@ -1,8 +1,8 @@
 ---
 description: OpenAPI contract — service.yaml aligned with HTTP API
-alwaysApply: true
+globs: src/contracts/**/*
+alwaysApply: false
 ---
-
 # Contracts (`src/contracts`)
 
 - Main specification: [src/contracts/service.yaml](src/contracts/service.yaml).
