@@ -1,0 +1,73 @@
+{
+  "repo_notes": [
+    {
+      "content": "FinControl backend (financial-backend): personal finance API with a local LLM agent (Ollama). Layered architecture under src/: domain (entities, services, repository contracts), application (Express controllers), infraestructure (MongoDB/Mongoose, PostgreSQL/pgvector, OpenSearch, adapters, external providers — note the spelling infraestructure with an 'e'), configuration (factories for DI, env-constants, dotenv). Domain must never import Infraestructure. Business rules live only in domain services; controllers are thin; repositories are CRUD + adapters (IM* ↔ I*). Composition root: src/app.ts + src/configuration/factory/*. Factories wire controllers and services.",
+      "author": "FinControl"
+    },
+    {
+      "content": "Priority domains to document: (1) auth — JWT register/login/refresh/logout in src/domain/auth and AuthController; (2) user profile — salary, address, onboarding status in src/domain/user; (3) onboarding — conversational flow in src/domain/onboarding with dedicated chat at /api/agent/onboarding/* and EUserVerificationStatus steps; (4) expense CRUD + hybrid search (OpenSearch lexical + pgvector semantic + RRF) in src/domain/expense and src/domain/expense-search; (5) dashboard summary; (6) AI agent tool calling in src/domain/agent (propose actions, human confirmation, agent-response-guard); (7) regional-economics (FIPE Zap, ViaCEP, optional Zoneval); (8) RAG syncExpense/syncUserFinancialContext; (9) global knowledge anonymization; (10) offline fine-tuning scripts under scripts/. OpenAPI contract: src/contracts/service.yaml. Tests: src/__tests__/unit and integration. Human docs: README.md, AGENTS.md, docs/architecture-and-layers.md.",
+      "author": "FinControl"
+    },
+    {
+      "content": "Stack: Node.js, TypeScript, Express, express-openapi-validator, MongoDB, PostgreSQL+pgvector, OpenSearch, Ollama (chat + nomic-embed-text embeddings), ViaCEP, optional Zoneval. Docker Compose brings up mongodb, postgres (pgvector), and opensearch. Reindex expenses with yarn db:expenses:reindex (scripts/reindex-expenses.ts). Folder spelling is fixed: infraestructure and configuration — do not rename in docs.",
+      "author": "FinControl"
+    }
+  ],
+  "pages": [
+    {
+      "title": "Architecture Overview",
+      "purpose": "High-level overview of FinControl layered architecture: request flow HTTP → Controller → Service → Repository → DB; roles of domain, application, infraestructure, configuration; point to AGENTS.md and docs/architecture-and-layers.md; mention src/app.ts bootstrap order (Mongo then Postgres then listen)."
+    },
+    {
+      "title": "Domain Layer",
+      "purpose": "Document src/domain/: entities (*ServiceEntity), I* interfaces, E* enums, service business rules, repository contracts (I*RepositoryRead/Write). Cover key contexts: auth, user, onboarding, expense, expense-search, dashboard, agent, address, regional-economics, rag, common utils (generateId, reference-month).",
+      "parent": "Architecture Overview"
+    },
+    {
+      "title": "Application and Configuration",
+      "purpose": "Document src/application/controllers/ (thin Express handlers, one service call per route) and src/configuration/factory/ DI factories, env-constants, dotenv, validateEnv. List controllers registered in src/app.ts.",
+      "parent": "Architecture Overview"
+    },
+    {
+      "title": "Infraestructure Persistence",
+      "purpose": "Document src/infraestructure/: Mongo schemas/models/IM* interfaces, repository implementations and adapters (dbToInternal/internalToDb), Postgres/pgvector setup and init SQL, OpenSearch expense index repository, Ollama LLM/embedding providers, ViaCEP and Zoneval external services, i18n error-catalog. Emphasize folder name spelling infraestructure.",
+      "parent": "Architecture Overview"
+    },
+    {
+      "title": "Auth and User Profile",
+      "purpose": "Document authentication (register, login, refresh, logout, GET /api/me) in src/domain/auth and AuthController; user profile, salary (PUT /api/users/me/salary), address (PUT /api/users/me/profile/address), onboardingRequired flag; UserService and profile interfaces in src/domain/user."
+    },
+    {
+      "title": "Onboarding Flow",
+      "purpose": "Document conversational onboarding: EUserVerificationStatus steps (PENDING_ADDRESS through COMPLETED), address form then chat; OnboardingService and OnboardingActionService in src/domain/onboarding; tools propose_update_profile and propose_complete_onboarding; routes POST /api/agent/onboarding/chat and /actions/execute; GET /api/users/me/onboarding; onboarding-system-prompt.md; EConversationType.ONBOARDING."
+    },
+    {
+      "title": "Expenses and Hybrid Search",
+      "purpose": "Document expense CRUD and pay flow in src/domain/expense and ExpenseController; hybrid search via ExpenseSearchService (OpenSearch lexical + RAG semantic + reciprocal rank fusion); GET /api/expenses?search=; indexing after mutations; yarn db:expenses:reindex and scripts/reindex-expenses.ts; src/domain/expense-search/."
+    },
+    {
+      "title": "Dashboard",
+      "purpose": "Document DashboardService and GET /api/dashboard with optional referenceMonth; how income, expenses, balance and commitment rates are computed from user salary and expenses."
+    },
+    {
+      "title": "AI Agent and Tool Calling",
+      "purpose": "Document AgentService chat loop with Ollama tool calling: get_financial_summary, list_expenses, get_regional_cost_profile, propose_create_expense, propose_update_salary; proposedActions and POST /api/agent/actions/execute; agent-response-guard; conversation history (GENERAL); personalization context from user profile; agent-system-prompt.md; AgentController routes under /api/agent/*."
+    },
+    {
+      "title": "Regional Economics",
+      "purpose": "Document RegionalEconomicsService: CEP-based rent/cost-of-living estimates using ViaCEP, FIPE Zap local data, optional Zoneval; livingSituation factors; cache REGIONAL_CACHE_TTL_HOURS; integration with agent tool get_regional_cost_profile and AddressController GET /api/address/zip/:zipCode."
+    },
+    {
+      "title": "RAG and Global Knowledge",
+      "purpose": "Document RagService syncExpense/syncUserFinancialContext and POST /api/rag/ask; pgvector embeddings per expense; AgentKnowledgeService anonymized community tips in global_knowledge_embeddings; PII filters; injection of top snippets into agent system prompt."
+    },
+    {
+      "title": "Fine-tuning Pipeline",
+      "purpose": "Document offline fine-tuning: yarn agent:export-training-data and yarn agent:fine-tune scripts; AgentTrainingExportService; PII filtering; AGENT_FINE_TUNE_* env vars; Modelfile and OLLAMA_MODEL=fincontrol-agent."
+    },
+    {
+      "title": "API Contracts and Testing",
+      "purpose": "Document OpenAPI contract src/contracts/service.yaml with express-openapi-validator; test layout in src/__tests__/unit and integration; yarn test / test:unit / test:int / test:coverage; mongodb-memory-server; coverage target ≥ 80% per AGENTS.md."
+    }
+  ]
+}
