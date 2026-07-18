@@ -2,7 +2,6 @@
 description: Where business rules live — Service required, Repository and Controller forbidden
 alwaysApply: true
 ---
-
 # Business rules by layer
 
 ## Principle
@@ -11,7 +10,7 @@ Every **business rule** (product decisions, conflicts, existence, flows, domain 
 
 **Repository** (`src/infraestructure/repository/`) and **Controller** (`src/application/controllers/`) **must not** implement business rules.
 
-Supplementary source: [docs/architecture-and-layers.md](docs/architecture-and-layers.md) (sections 3–5) and [AGENTS.md](AGENTS.md) (section 7).
+Supplementary source: [docs/architecture-and-layers.md](docs/architecture-and-layers.md) (sections 3–5) and [AGENTS.md](AGENTS.md) (Architecture / Non-negotiable rules).
 
 ---
 
@@ -37,11 +36,15 @@ Supplementary source: [docs/architecture-and-layers.md](docs/architecture-and-la
 - Validate uniqueness, business state, eligibility, or status transitions.
 - Instantiate `*ServiceEntity` or decide whether the product operation is allowed.
 - Any `if` whose purpose is **product**, not **data access**.
+- Merge / flatten nested domain fields for Mongo (e.g. `if (key === 'profile')` → `profile.${k}`).
+- Product defaults or fallbacks (`proposedActions?.length ? … : undefined`, `field || metadata.field`).
+- Invent pagination meaning (“últimas N” via `skip = total - limit`) — contract exposes skip/limit/sort; service chooses.
 
 ## Repository — allowed
 
 - `Model.findOne` / `create` / `update` / `delete`.
-- `dbToInternal` / `internalToDb` (pure adapters).
+- `$set: updateData` with the payload the **service** already composed (see `expense.repository.write.ts`).
+- `dbToInternal` / `internalToDb` (pure adapters — no domain orchestration).
 - `try/catch` → `DATABASE_ERROR` + log (pattern in `user.repository.*.ts`).
 - Return `null` when the document does not exist (let the **service** decide the business error).
 
@@ -109,6 +112,39 @@ res.status(201).json(newUser);
 // errors: handleTranslatedError(error, ErrorCatalog, res)
 ```
 
+### Controller — no multi-service orchestration
+
+```ts
+// ❌ Controller wires a workflow across services
+await this.conversationService.getOrCreateOnboardingConversation(userId);
+return this.userService.getOnboardingStatus(userId);
+```
+
+```ts
+// ✅ One service owns the flow (injects other ports as needed)
+return this.userService.getOnboardingStatus(userId);
+// or OnboardingService.getOnboardingStatus(userId)
+```
+
+### Partial nested update — merge in Service, not Repository
+
+```ts
+// ❌ Repository flattens domain knowledge
+if (key === 'profile') {
+  for (const profileKey of Object.keys(value)) {
+    setPayload[`profile.${profileKey}`] = value[profileKey];
+  }
+}
+```
+
+```ts
+// ✅ Service sends a complete nested object; repository does $set: updateData
+const userData = params.userData.profile
+  ? { ...params.userData, profile: { ...(user.profile ?? {}), ...params.userData.profile } }
+  : params.userData;
+await this.userRepositoryWrite.updateUserById(id, userData);
+```
+
 ### Service — do not couple to Mongo
 
 ```ts
@@ -122,11 +158,28 @@ const doc = await UserModel.findOne({ email });
 const user = await this.userRepositoryRead.findUserByEmail(email);
 ```
 
+### Domain — IDs and I/O
+
+```ts
+// ❌ Entity/service
+import { Types } from 'mongoose';
+this.id = user.id || new Types.ObjectId().toHexString();
+import { promises as fs } from 'fs';
+await fs.writeFile(...);
+```
+
+```ts
+// ✅
+import { generateId } from '../../common/utils/generate-id';
+this.id = user.id || generateId();
+// filesystem → ITrainingDatasetWriter (port) + infra implementation via factory
+```
+
 ---
 
 ## Quick checklist when generating code
 
-- [ ] Conflict, business 404, workflows → **Service**
-- [ ] Object format/required fields → **Entity**
-- [ ] Query + mapping + `null` + DB error → **Repository**
-- [ ] HTTP status and response body → **Controller** (no `UserModel`)
+- [ ] Conflict, business 404, workflows, multi-service flows → **Service**
+- [ ] Object format/required fields → **Entity** (`generateId()`, no mongoose)
+- [ ] Query + mapping + `$set` payload as received + `null` + DB error → **Repository**
+- [ ] HTTP: one service call, status, body → **Controller** (no `*Model`, no orchestration)

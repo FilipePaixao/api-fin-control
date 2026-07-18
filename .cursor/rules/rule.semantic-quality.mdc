@@ -1,8 +1,8 @@
 ---
 description: Semantic naming — variables, methods, files, REST paths, OpenAPI schemas; complements I/IM/E rules
-alwaysApply: true
+globs: src/domain/**/*,src/application/**/*,src/contracts/**/*
+alwaysApply: false
 ---
-
 # Semantic quality (naming and REST)
 
 Supplementary sources: [AGENTS.md](../../AGENTS.md), [docs/architecture-and-layers.md](../../docs/architecture-and-layers.md). Type prefixes (`I*`, `IM*`, `E*`) live in [rule.naming-patterns.mdc](rule.naming-patterns.mdc). Layer responsibilities in [rule.business-rules-layers.mdc](rule.business-rules-layers.mdc).
@@ -91,8 +91,8 @@ class UserController { ... }
 **Criteria:** See [rule.naming-patterns.mdc](rule.naming-patterns.mdc). Do not duplicate here.
 
 ```ts
-✅ IUser, IUserRepositoryRead, IMAppointment
-❌ UserInterface, AppointmentDbModel (without IM)
+✅ IUser, IUserRepositoryRead, IMExpense
+❌ UserInterface, ExpenseDbModel (without IM)
 ```
 
 ---

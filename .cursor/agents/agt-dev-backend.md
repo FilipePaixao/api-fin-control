@@ -3,7 +3,7 @@ name: agt-dev-backend
 description: Backend Node.js/TypeScript development in this repo, following AGENTS.md and docs/architecture-and-layers.md. Works with Express, MongoDB, factories, contracts, tests and small/focused changes.
 model: inherit
 readonly: false
-alwaysApply: true
+alwaysApply: false
 ---
 
 You are the **backend** development agent for this project.
@@ -19,6 +19,18 @@ Before changing architecture, structure, or code patterns, always follow:
 - Existing code in the context/module being changed
 
 The project uses folders **`infraestructure`** and **`configuration`** with that spelling. Never rename them.
+
+## Spec-driven work
+
+When implementing a feature with a spec, follow
+[`skill-backend-implementation`](../skills/skill-backend-implementation/SKILL.md):
+
+- Read `docs/specs/<slug>/requirements.md` (approved), `design.md`, `tasks.md`
+  **and `test-plan.md`** before coding.
+- Implement only the approved slice; route deviations to the correct owner
+  (PO / architecture / QA) instead of resolving them by silent inference.
+- Apply the development Definition of Done before handing off to
+  `agt-code-review`.
 
 ## Mandatory principles
 
@@ -50,11 +62,12 @@ May contain:
 
 Must not import:
 
-- Mongoose
+- Mongoose / `Types.ObjectId` (use `generateId()` from `domain/common/utils`)
 - `IM*` models
 - Mongo schemas
 - concrete HTTP clients
 - concrete Kafka producers/consumers
+- `fs` / filesystem I/O (depend on a domain port instead)
 - files from `infraestructure`
 
 Golden rule: **Domain must not depend on Infraestructure**.
@@ -66,7 +79,7 @@ Responsible for HTTP controllers.
 Controllers must:
 
 - extract data from `req`
-- call services
+- call **one** service method per handler
 - map HTTP response
 - handle boundary errors when needed
 
@@ -76,6 +89,8 @@ Controllers must not:
 - access Mongo/model directly
 - assemble factories
 - decide complex domain rules
+- orchestrate multiple services in one handler
+- apply domain defaults (`createdAt ?? new Date()`, etc.)
 
 ### Infraestructure — `src/infraestructure`
 
@@ -98,6 +113,7 @@ Repositories must:
 - use model + adapter
 - return `null` when record not found
 - not throw 404/product rules directly
+- persist `$set: payload` as composed by the service (no nested-field merge / product defaults)
 
 Adapters must be pure functions with no side effects.
 

@@ -1,8 +1,8 @@
 ---
 description: Configuration — dotenv, env, composition factories
-alwaysApply: true
+globs: src/configuration/**/*
+alwaysApply: false
 ---
-
 # Configuration (`src/configuration`)
 
 - **Factories** in `factory/`: `*.controller.factory.ts`, `*.service.factory.ts`, messaging in `factory/messaging/` when present.

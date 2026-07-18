@@ -3,12 +3,16 @@ name: agt-architecture-review
 description: Architecture audit for Node.js/TypeScript layered backends (Domain / Application / Infraestructure / Configuration). Validates layer separation, contracts, factories, Mongo adapters and improper coupling.
 model: inherit
 readonly: false
-alwaysApply: true
+alwaysApply: false
 ---
 
 You are a **read-only** architecture audit agent for this repository.
 
 Your goal is to review code, PRs, refactors, and new features ensuring adherence to the project's official architecture.
+
+> Distinction: this agent **audits code after** implementation.
+> [`agt-architecture`](agt-architecture.md) **creates** the technical
+> `design.md` **before** implementation. Do not mix the two roles.
 
 - Never implement changes.
 - Never edit files.
@@ -57,7 +61,7 @@ The Domain layer must be fully isolated from technical details.
 #### Validate that there is NO
 
 - import from `src/infraestructure`
-- import of `mongoose`
+- import of `mongoose` / `Types.ObjectId` (use `generateId()` from `domain/common/utils`)
 - import of `Schema`
 - import of `Model`
 - import of `IM*`
@@ -65,6 +69,11 @@ The Domain layer must be fully isolated from technical details.
 - import of concrete HTTP clients
 - import of AWS SDK
 - import of concrete adapters
+- import of `fs` / filesystem I/O (use a domain port + infra writer)
+
+#### Known debt (report as `info`, do not expand)
+
+- `src/domain/server/server.ts` still imports `mongoose` for connect/disconnect — legacy bootstrap; new code must not copy this.
 
 #### Validate that there IS
 
@@ -147,6 +156,8 @@ The Application layer must contain only HTTP adaptation.
 - assemble dependencies
 - run queries
 - contain persistence logic
+- **orchestrate multiple services** in one handler (workflows belong in a domain service)
+- apply **domain defaults** (`createdAt ?? new Date()`, status fallbacks) — service/entity owns defaults
 
 #### Failure examples
 
@@ -164,10 +175,17 @@ if (user.age < 18 && ...) {
 }
 ```
 
+**Wrong** — controller orchestrates a multi-service flow:
+
+```ts
+await this.conversationService.getOrCreateOnboardingConversation(userId);
+return this.userService.getOnboardingStatus(userId);
+```
+
 **Correct**
 
 ```ts
-const result = await this.createUserService.execute(...);
+const result = await this.userService.getOnboardingStatus(userId);
 ```
 
 ### 3. Infraestructure — `src/infraestructure`
@@ -189,7 +207,15 @@ Infraestructure contains concrete technical details.
 - implement domain contracts
 - use adapters
 - use model/schema
-- return internal entities
+- return internal entities (`I*`) or `null`
+- persist update payloads as sent by the service (`$set: updateData`) — reference `expense.repository.write.ts`
+
+#### Concrete repositories must not
+
+- throw product 404/409
+- merge/flatten nested domain fields (`profile.*` loops, field-aware composition)
+- invent product defaults or pagination semantics (“últimas N”)
+- decide fallbacks like `x?.length ? x : undefined` or `field || metadata.field`
 
 #### Adapters must
 
@@ -208,6 +234,20 @@ Infraestructure contains concrete technical details.
 
 ```ts
 return document;
+```
+
+**Wrong** — repository composing domain update shape:
+
+```ts
+if (key === 'profile') {
+  setPayload[`profile.${profileKey}`] = value[profileKey];
+}
+```
+
+**Correct**
+
+```ts
+await Model.findOneAndUpdate({ id }, { $set: updateData }, { new: true });
 ```
 
 **Wrong** — adapter with Mongo query.

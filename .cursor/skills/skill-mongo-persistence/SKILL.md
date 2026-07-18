@@ -41,13 +41,15 @@ Read [docs/architecture-and-layers.md](../../../docs/architecture-and-layers.md)
 | Allowed | Not allowed |
 |------|----------|
 | CRUD + `dbToInternal` | Rule "not found → 404" (service decides) |
-| Return `null` | Expose `IM*` to controller or domain |
-| Throw 500 on Mongo failure | Import service or controller |
+| `$set: payload` as received from service | Flatten/merge nested domain fields (`profile.*`) |
+| Return `null` | Product defaults / “últimas N” pagination |
+| Throw 500 on Mongo failure | Expose `IM*` to controller or domain |
+| | Import service or controller |
 
 ## Diagram (summary)
 
 ```text
-I* (domain) ←── dbToInternal ── IMAppointment (Mongo doc)
+I* (domain) ←── dbToInternal ── IMExpense (Mongo doc)
 I* ── internalToDb ──→ persistable payload (without _id/timestamps managed by schema)
 ```
 
@@ -56,5 +58,6 @@ I* ── internalToDb ──→ persistable payload (without _id/timestamps man
 - [ ] Read/Write contracts in domain updated before infra
 - [ ] Adapter maps all new fields
 - [ ] Read methods only in Read; write only in Write
+- [ ] Update uses `$set` with service-composed payload (see `expense.repository.write.ts`)
 - [ ] Tests in `repository/read` and `repository/write`
-- [ ] Domain still has no imports from `mongoose` or `infraestructure`
+- [ ] Domain still has no imports from `mongoose` or `infraestructure` (IDs via `generateId()`)
