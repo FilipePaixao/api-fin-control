@@ -1,5 +1,7 @@
 # FinControl — Backend API
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/FilipePaixao/financial-backend)
+
 Backend do **FinControl** — projeto **em desenvolvimento** de controle financeiro pessoal com assistente de IA integrado. A API expõe gestão de usuários, despesas e dashboard, **onboarding conversacional**, perfil personalizado, **benchmark regional de custo de vida** e busca híbrida de despesas, além de um agente financeiro experimental (consulta dados, propõe ações, aprende com conversas anonimizadas).
 
 Construído em **Node.js**, **TypeScript**, **Express** e **MongoDB** (Mongoose), com **PostgreSQL/pgvector**, **OpenSearch**, validação **OpenAPI**, testes **Jest** e arquitetura em **camadas** (domain, application, infraestructure, configuration).
@@ -32,12 +34,12 @@ Este repositório está sendo **aberto à comunidade** porque acreditamos que:
 | Perfil | Caminho sugerido |
 |--------|------------------|
 | **Curioso / early adopter** | Leia [Propósito do sistema](#1-propósito-do-sistema), [Perfil e onboarding](#41-perfil-endereço-e-onboarding) e [Assistente de IA](#5-assistente-de-ia); rode **localmente** com [Como rodar](#11-como-rodar) |
-| **Desenvolvedor** | Explore [Arquitetura](#3-arquitetura-em-camadas), [AGENTS.md](AGENTS.md) e abra issues ou PRs |
+| **Desenvolvedor** | Explore [Arquitetura](#3-arquitetura-em-camadas), [AGENTS.md](AGENTS.md) ou a [wiki dinâmica no DeepWiki](https://deepwiki.com/FilipePaixao/financial-backend); abra issues ou PRs |
 | **Contribuidor** | Veja [Contribuindo](#15-contribuindo) — bugs, features, docs e testes são bem-vindos |
 
 Feedback, ideias e pull requests são encorajados. Se o projeto te ajudou ou você quer ajudar a evoluir, **sinta-se em casa**.
 
-**Documentação de arquitetura:** [docs/architecture-and-layers.md](docs/architecture-and-layers.md) · [AGENTS.md](AGENTS.md)
+**Documentação:** [docs/architecture-and-layers.md](docs/architecture-and-layers.md) · [AGENTS.md](AGENTS.md) · [DeepWiki](https://deepwiki.com/FilipePaixao/financial-backend) (wiki gerada a partir do código, com Q&A; o badge acima mantém refresh semanal automático)
 
 ---
 
