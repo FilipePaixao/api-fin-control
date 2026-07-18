@@ -48,7 +48,10 @@ Deepen partial flows without repeating this guide:
 
 ## Final checklist
 
-- [ ] Domain without imports from `infraestructure` or `mongoose`
+- [ ] Domain without imports from `infraestructure`, `mongoose`, or `fs` — IDs via `generateId()`
+- [ ] Entity uses `generateId()` from `src/domain/common/utils/generate-id.ts`
+- [ ] Controllers call a single service method (no multi-service orchestration)
+- [ ] Write repos use `$set: payload` as received (no nested-field merge)
 - [ ] `IM*` only in infra; pure adapters
 - [ ] Factories inject concrete implementations
 - [ ] `yarn test` and `yarn lint` pass
