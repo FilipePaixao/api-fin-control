@@ -21,9 +21,19 @@ export class ExpenseController implements IController {
 
   initRoutes() {
     this.router.post('/expenses', this.authenticateMiddleware, this.createExpense);
+    this.router.post(
+      '/expenses/installments',
+      this.authenticateMiddleware,
+      this.createInstallmentExpenses,
+    );
     this.router.get('/expenses', this.authenticateMiddleware, this.getExpenses);
     this.router.get('/expenses/:id', this.authenticateMiddleware, this.getExpenseById);
     this.router.put('/expenses/:id', this.authenticateMiddleware, this.updateExpense);
+    this.router.delete(
+      '/expenses/installments/:groupId',
+      this.authenticateMiddleware,
+      this.deleteInstallmentGroup,
+    );
     this.router.delete('/expenses/:id', this.authenticateMiddleware, this.deleteExpense);
     this.router.patch(
       '/expenses/:id/pay',
@@ -31,6 +41,33 @@ export class ExpenseController implements IController {
       this.payExpense,
     );
   }
+
+  createInstallmentExpenses = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const createdExpenses = await this.expenseService.createInstallmentExpenses(
+        req.userId!,
+        {
+          ...req.body,
+          dueDate: req.body.dueDate ? new Date(req.body.dueDate) : undefined,
+        },
+      );
+      res.status(201).json(createdExpenses);
+    } catch (error) {
+      handleTranslatedError(error, ErrorCatalog, res);
+    }
+  };
+
+  deleteInstallmentGroup = async (
+    req: Request<{ groupId: string }>,
+    res: Response,
+  ): Promise<void> => {
+    try {
+      await this.expenseService.deleteInstallmentGroup(req.userId!, req.params.groupId);
+      res.status(204).send();
+    } catch (error) {
+      handleTranslatedError(error, ErrorCatalog, res);
+    }
+  };
 
   createExpense = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -53,6 +90,7 @@ export class ExpenseController implements IController {
         from: req.query.from ? new Date(String(req.query.from)) : undefined,
         to: req.query.to ? new Date(String(req.query.to)) : undefined,
         search: req.query.search ? String(req.query.search) : undefined,
+        installmentGroupId: req.query.installmentGroupId as string | undefined,
       });
       res.status(200).json(expenses);
     } catch (error) {

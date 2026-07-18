@@ -1,5 +1,7 @@
 import { serviceLogErrorHandler, IThrowedError } from '@sauvvitech/st-packages';
 import { EErrorCode } from '../../common/errors/enums/EErrorCode';
+import { addMonthsToDate, addMonthsToReferenceMonth } from '../../common/utils/reference-month';
+import { generateId } from '../../common/utils/generate-id';
 import { EExpenseStatus } from '../entity/enums/EExpenseStatus';
 import { ExpenseServiceEntity } from '../entity/expense.entity';
 import {
@@ -9,8 +11,13 @@ import {
   IPayExpenseInput,
   IUpdateExpenseInput,
 } from '../interfaces/expense.service.interface';
-import { ICreateExpenseInput, IExpense } from '../entity/interfaces/expense.interface';
+import {
+  ICreateExpenseInput,
+  ICreateInstallmentExpenseInput,
+  IExpense,
+} from '../entity/interfaces/expense.interface';
 import { toExpenseIndexDocument } from '../utils/expense-index-document.utils';
+import { buildInstallmentName, splitInstallmentAmounts } from '../utils/installment.utils';
 
 export class ExpenseService implements IExpenseService {
   private readonly expenseRepositoryRead: IParamsExpenseService['expenseRepositoryRead'];
@@ -55,7 +62,77 @@ export class ExpenseService implements IExpenseService {
       referenceMonth: filters.referenceMonth,
       from: filters.from,
       to: filters.to,
+      installmentGroupId: filters.installmentGroupId,
     });
+  }
+
+  async createInstallmentExpenses(
+    userId: string,
+    payload: ICreateInstallmentExpenseInput,
+  ): Promise<IExpense[]> {
+    if (payload.totalInstallments < 2 || payload.totalInstallments > 60) {
+      throw {
+        status: 400,
+        errorCode: EErrorCode.FIELD_INVALID,
+        message: 'Total installments must be between 2 and 60',
+      } as IThrowedError;
+    }
+
+    const installmentGroupId = generateId();
+    const amounts = splitInstallmentAmounts(payload.totalAmount, payload.totalInstallments);
+    const expenses: IExpense[] = [];
+
+    for (let index = 0; index < payload.totalInstallments; index += 1) {
+      const installmentNumber = index + 1;
+      const referenceMonth = addMonthsToReferenceMonth(payload.referenceMonth, index);
+      const dueDate = payload.dueDate
+        ? addMonthsToDate(payload.dueDate, index)
+        : undefined;
+
+      const expenseEntity = new ExpenseServiceEntity({
+        userId,
+        name: buildInstallmentName(
+          payload.name,
+          installmentNumber,
+          payload.totalInstallments,
+        ),
+        description: payload.description,
+        amount: amounts[index],
+        category: payload.category,
+        paymentMethod: payload.paymentMethod,
+        dueDate,
+        referenceMonth,
+        installmentGroupId,
+        installmentNumber,
+        totalInstallments: payload.totalInstallments,
+        totalAmount: payload.totalAmount,
+      });
+      expenses.push(expenseEntity);
+    }
+
+    const createdExpenses = await this.expenseRepositoryWrite.createManyExpenses(expenses);
+    createdExpenses.forEach((expense) => this.scheduleExpenseIndexing(expense));
+    return createdExpenses;
+  }
+
+  async deleteInstallmentGroup(userId: string, installmentGroupId: string): Promise<void> {
+    const expenses = await this.expenseRepositoryRead.listExpensesByInstallmentGroupId(
+      userId,
+      installmentGroupId,
+    );
+
+    if (!expenses.length) {
+      throw {
+        status: 404,
+        errorCode: EErrorCode.RESOURCE_NOT_FOUND,
+        message: 'Installment group not found',
+        details: { installmentGroupId },
+      } as IThrowedError;
+    }
+
+    const expenseIds = expenses.map((expense) => expense.id);
+    await this.expenseRepositoryWrite.deleteExpensesByIds(expenseIds);
+    expenseIds.forEach((expenseId) => this.scheduleExpenseRemoval(userId, expenseId));
   }
 
   async getExpenseById(userId: string, expenseId: string): Promise<IExpense> {

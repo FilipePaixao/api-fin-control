@@ -685,6 +685,10 @@ paths:
           schema:
             type: string
             minLength: 1
+        - name: installmentGroupId
+          in: query
+          schema:
+            type: string
       responses:
         '200':
           description: User expenses
@@ -696,6 +700,70 @@ paths:
                   $ref: '#/components/schemas/Expense'
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+
+  /api/expenses/installments:
+    post:
+      tags:
+        - Expenses
+      summary: Create installment expenses
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewInstallmentExpense'
+      responses:
+        '201':
+          description: Installment expenses created
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Expense'
+        '400':
+          description: Invalid payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+
+  /api/expenses/installments/{groupId}:
+    delete:
+      tags:
+        - Expenses
+      summary: Delete installment group
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Installment group deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '404':
+          description: Installment group not found
           content:
             application/json:
               schema:
@@ -832,6 +900,212 @@ paths:
                 $ref: '#/components/schemas/TranslatedApiError'
         '404':
           description: Expense not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+
+  /api/incomes:
+    post:
+      tags:
+        - Incomes
+      summary: Create income
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewIncome'
+      responses:
+        '201':
+          description: Income created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Income'
+        '400':
+          description: Invalid payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+    get:
+      tags:
+        - Incomes
+      summary: List incomes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [SALARY, FREELANCE, INVESTMENT, BONUS, OTHER]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [EXPECTED, RECEIVED, CANCELED]
+        - name: referenceMonth
+          in: query
+          schema:
+            type: string
+            pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+      responses:
+        '200':
+          description: User incomes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Income'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+
+  /api/incomes/{id}:
+    get:
+      tags:
+        - Incomes
+      summary: Get income by id
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Income found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Income'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '404':
+          description: Income not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+    put:
+      tags:
+        - Incomes
+      summary: Update income
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateIncome'
+      responses:
+        '200':
+          description: Income updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Income'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '404':
+          description: Income not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+    delete:
+      tags:
+        - Incomes
+      summary: Delete income
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Income deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '404':
+          description: Income not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+
+  /api/incomes/{id}/receive:
+    patch:
+      tags:
+        - Incomes
+      summary: Mark income as received
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReceiveIncome'
+      responses:
+        '200':
+          description: Income marked as received
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Income'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedApiError'
+        '404':
+          description: Income not found
           content:
             application/json:
               schema:
@@ -1577,6 +1851,14 @@ components:
           format: date-time
         referenceMonth:
           type: string
+        installmentGroupId:
+          type: string
+        installmentNumber:
+          type: integer
+        totalInstallments:
+          type: integer
+        totalAmount:
+          type: number
         createdAt:
           type: string
           format: date-time
@@ -1607,6 +1889,38 @@ components:
         status:
           type: string
           enum: [PENDING, PAID, OVERDUE, CANCELED]
+        dueDate:
+          type: string
+          format: date-time
+        referenceMonth:
+          type: string
+          pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+    NewInstallmentExpense:
+      type: object
+      required:
+        - name
+        - totalAmount
+        - totalInstallments
+        - category
+        - referenceMonth
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        totalAmount:
+          type: number
+          minimum: 0.01
+        totalInstallments:
+          type: integer
+          minimum: 2
+          maximum: 60
+        category:
+          type: string
+          enum: [HOUSING, FOOD, TRANSPORT, HEALTH, EDUCATION, ENTERTAINMENT, SUBSCRIPTIONS, DEBT, INVESTMENT, OTHER]
+        paymentMethod:
+          type: string
+          enum: [CREDIT_CARD, DEBIT_CARD, PIX, CASH, BANK_SLIP, BANK_TRANSFER, OTHER]
         dueDate:
           type: string
           format: date-time
@@ -1647,6 +1961,91 @@ components:
         paymentMethod:
           type: string
           enum: [CREDIT_CARD, DEBIT_CARD, PIX, CASH, BANK_SLIP, BANK_TRANSFER, OTHER]
+    Income:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        name:
+          type: string
+        amount:
+          type: number
+        category:
+          type: string
+          enum: [SALARY, FREELANCE, INVESTMENT, BONUS, OTHER]
+        referenceMonth:
+          type: string
+        receivedAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [EXPECTED, RECEIVED, CANCELED]
+        source:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    NewIncome:
+      type: object
+      required:
+        - name
+        - amount
+        - category
+        - referenceMonth
+      properties:
+        name:
+          type: string
+        amount:
+          type: number
+          minimum: 0.01
+        category:
+          type: string
+          enum: [SALARY, FREELANCE, INVESTMENT, BONUS, OTHER]
+        referenceMonth:
+          type: string
+          pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+        receivedAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [EXPECTED, RECEIVED, CANCELED]
+        source:
+          type: string
+    UpdateIncome:
+      type: object
+      properties:
+        name:
+          type: string
+        amount:
+          type: number
+          minimum: 0.01
+        category:
+          type: string
+          enum: [SALARY, FREELANCE, INVESTMENT, BONUS, OTHER]
+        referenceMonth:
+          type: string
+          pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+        receivedAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [EXPECTED, RECEIVED, CANCELED]
+        source:
+          type: string
+    ReceiveIncome:
+      type: object
+      properties:
+        receivedAt:
+          type: string
+          format: date-time
     DashboardByCategory:
       type: object
       properties:
@@ -1693,6 +2092,13 @@ components:
           enum:
             - BRL
             - null
+        totalIncome:
+          type: number
+        effectiveIncome:
+          type: number
+          nullable: true
+        usingSalaryFallback:
+          type: boolean
         totalExpenses:
           type: number
         totalPaid:
@@ -1707,6 +2113,10 @@ components:
         incomeCommitmentPercent:
           type: number
           nullable: true
+        incomesByCategory:
+          type: array
+          items:
+            $ref: '#/components/schemas/DashboardByIncomeCategory'
         byCategory:
           type: array
           items:
@@ -1715,6 +2125,18 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DashboardTopExpense'
+    DashboardByIncomeCategory:
+      type: object
+      properties:
+        category:
+          type: string
+          enum: [SALARY, FREELANCE, INVESTMENT, BONUS, OTHER]
+        total:
+          type: number
+        received:
+          type: number
+        expected:
+          type: number
     RagQuestion:
       type: object
       required:
