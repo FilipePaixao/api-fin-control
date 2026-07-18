@@ -54,3 +54,20 @@ export function resolveReferenceMonth(raw?: unknown): string {
 
   return normalized ?? getCurrentReferenceMonth();
 }
+
+export function parseReferenceMonth(value: string): { year: number; month: number } {
+  const [year, month] = value.split('-').map(Number);
+  return { year: year || new Date().getFullYear(), month: month || new Date().getMonth() + 1 };
+}
+
+export function addMonthsToReferenceMonth(value: string, delta: number): string {
+  const { year, month } = parseReferenceMonth(value);
+  const date = new Date(year, month - 1 + delta, 1);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+}
+
+export function addMonthsToDate(date: Date, delta: number): Date {
+  const result = new Date(date);
+  result.setMonth(result.getMonth() + delta);
+  return result;
+}
