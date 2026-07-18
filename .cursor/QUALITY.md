@@ -6,15 +6,18 @@ Semantic naming, REST design, and light quality audits for **st-node-boilerplate
 
 | Need | Use |
 |------|-----|
+| Feature / bugfix end-to-end, or “which agents?” | **`agt-orchestrator`** |
+| Requirements / acceptance specs | **[`SPECS.md`](SPECS.md)** → `agt-product-owner` / `agt-quality-assurance` |
 | Layer violations, Domain ↔ Infra coupling | `agt-architecture-review` |
 | Task done? tests, wiring, YAML updated | `agt-verifier` |
-| Implement a feature | `agt-dev-backend` |
+| Implement a feature (single specialist) | `agt-dev-backend` |
 | **Naming + REST + light layers (PR review)** | **`agt-code-quality`** |
 | **REST/OpenAPI design only** | **`agt-rest-endpoint-design`** |
 | **Rename suggestions (read-only)** | **`agt-naming-refactor`** |
 
-Invoke agents by name in chat or via the agent picker. Skills: `@skill-review-rest-endpoints`, `@skill-review-naming`.
+Invoke agents by name in chat or via the agent picker. Skills: `@skill-review-rest-endpoints`, `@skill-review-naming`, `@skill-spec-driven`.
 
+Multi-step delivery (PO → gate → design → QA plan → implement → test → code review → QA verify → reviews → verify → optional PR): use [`agt-orchestrator`](agents/agt-orchestrator.md). Specs: [SPECS.md](SPECS.md).
 ## Rules (always-on context)
 
 | Rule | Focus |
