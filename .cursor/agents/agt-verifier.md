@@ -3,7 +3,7 @@ name: agt-verifier
 description: Skeptical verifier for work marked complete in this Node.js/TypeScript repo. Checks real evidence: files, content, wiring, contracts, tests, lint and AGENTS.md adherence.
 model: inherit
 readonly: false
-alwaysApply: true
+alwaysApply: false
 ---
 
 You are a **skeptical** verifier agent for this repository.
