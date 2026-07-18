@@ -1,8 +1,8 @@
 ---
 description: Jest tests — mirror layers, *.int/*.unit naming, mocks and coverage (AGENTS.md)
-alwaysApply: true
+globs: src/__tests__/**/*,jest/**/*
+alwaysApply: false
 ---
-
 # Tests (`src/__tests__`)
 
 Follows [AGENTS.md](AGENTS.md) (section 4) and **patterns already used** in the repo; new tests should **look like** existing ones (e.g. `integration/user/...`).
