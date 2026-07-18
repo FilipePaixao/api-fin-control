@@ -61,6 +61,9 @@ export class ExpenseRepositoryRead implements IExpenseRepositoryRead {
       if (filter.referenceMonth) {
         query.referenceMonth = filter.referenceMonth;
       }
+      if (filter.installmentGroupId) {
+        query.installmentGroupId = filter.installmentGroupId;
+      }
       if (filter.from || filter.to) {
         query.dueDate = {};
         if (filter.from) {
@@ -86,5 +89,12 @@ export class ExpenseRepositoryRead implements IExpenseRepositoryRead {
         errorCode: EErrorCode.DATABASE_ERROR,
       } as IThrowedError;
     }
+  }
+
+  async listExpensesByInstallmentGroupId(
+    userId: string,
+    installmentGroupId: string,
+  ): Promise<IExpense[]> {
+    return this.listExpenses({ userId, installmentGroupId });
   }
 }

@@ -14,6 +14,10 @@ export function dbToInternal(expense: IMExpense): IExpense {
     dueDate: expense.dueDate,
     paidAt: expense.paidAt,
     referenceMonth: expense.referenceMonth,
+    installmentGroupId: expense.installmentGroupId,
+    installmentNumber: expense.installmentNumber,
+    totalInstallments: expense.totalInstallments,
+    totalAmount: expense.totalAmount,
     createdAt: expense.createdAt,
     updatedAt: expense.updatedAt,
   };
@@ -34,5 +38,9 @@ export function internalToDb(
     dueDate: expense.dueDate,
     paidAt: expense.paidAt,
     referenceMonth: expense.referenceMonth,
+    installmentGroupId: expense.installmentGroupId,
+    installmentNumber: expense.installmentNumber,
+    totalInstallments: expense.totalInstallments,
+    totalAmount: expense.totalAmount,
   };
 }

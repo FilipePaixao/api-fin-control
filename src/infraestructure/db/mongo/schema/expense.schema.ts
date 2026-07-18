@@ -22,6 +22,10 @@ export const ExpenseSchema = new Schema<IMExpense>(
     dueDate: { type: Date },
     paidAt: { type: Date },
     referenceMonth: { type: String, required: true },
+    installmentGroupId: { type: String },
+    installmentNumber: { type: Number, min: 1 },
+    totalInstallments: { type: Number, min: 2 },
+    totalAmount: { type: Number, min: 0 },
   },
   { timestamps: true },
 );
