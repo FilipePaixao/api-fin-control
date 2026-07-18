@@ -1,5 +1,7 @@
 import { IUserRepositoryRead } from '../../../domain/user/repository/user.repository.read';
 import { IUserRepositoryWrite } from '../../../domain/user/repository/user.repository.write';
+import { IIncomeRepositoryRead } from '../../../domain/income/repository/income.repository.read';
+import { IIncomeRepositoryWrite } from '../../../domain/income/repository/income.repository.write';
 import { IExpenseRepositoryRead } from '../../../domain/expense/repository/expense.repository.read';
 import { IExpenseRepositoryWrite } from '../../../domain/expense/repository/expense.repository.write';
 import { IRefreshTokenRepositoryRead } from '../../../domain/auth/repository/refresh-token.repository.read';
@@ -40,6 +42,7 @@ export function createExpenseRepositoryReadMock(
     findExpenseById: jest.fn(),
     findExpensesByIds: jest.fn(),
     listExpenses: jest.fn(),
+    listExpensesByInstallmentGroupId: jest.fn(),
     ...override,
   };
 }
@@ -49,8 +52,31 @@ export function createExpenseRepositoryWriteMock(
 ): IExpenseRepositoryWrite {
   return {
     createExpense: jest.fn(),
+    createManyExpenses: jest.fn(),
     updateExpenseById: jest.fn(),
     deleteExpenseById: jest.fn(),
+    deleteExpensesByIds: jest.fn(),
+    ...override,
+  };
+}
+
+export function createIncomeRepositoryReadMock(
+  override: Partial<IIncomeRepositoryRead> = {},
+): IIncomeRepositoryRead {
+  return {
+    findIncomeById: jest.fn(),
+    listIncomes: jest.fn().mockResolvedValue([]),
+    ...override,
+  };
+}
+
+export function createIncomeRepositoryWriteMock(
+  override: Partial<IIncomeRepositoryWrite> = {},
+): IIncomeRepositoryWrite {
+  return {
+    createIncome: jest.fn(),
+    updateIncomeById: jest.fn(),
+    deleteIncomeById: jest.fn(),
     ...override,
   };
 }
