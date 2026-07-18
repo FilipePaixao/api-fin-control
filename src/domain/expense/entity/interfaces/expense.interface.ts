@@ -14,6 +14,10 @@ export interface IExpense {
   dueDate?: Date;
   paidAt?: Date;
   referenceMonth: string;
+  installmentGroupId?: string;
+  installmentNumber?: number;
+  totalInstallments?: number;
+  totalAmount?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -26,6 +30,22 @@ export interface ICreateExpenseInput {
   category: EExpenseCategory;
   paymentMethod?: EPaymentMethod;
   status?: EExpenseStatus;
+  dueDate?: Date;
+  referenceMonth: string;
+  installmentGroupId?: string;
+  installmentNumber?: number;
+  totalInstallments?: number;
+  totalAmount?: number;
+}
+
+export interface ICreateInstallmentExpenseInput {
+  userId: string;
+  name: string;
+  description?: string;
+  totalAmount: number;
+  totalInstallments: number;
+  category: EExpenseCategory;
+  paymentMethod?: EPaymentMethod;
   dueDate?: Date;
   referenceMonth: string;
 }
