@@ -22,6 +22,24 @@ export class ExpenseRepositoryWrite implements IExpenseRepositoryWrite {
     }
   }
 
+  async createManyExpenses(expenses: IExpense[]): Promise<IExpense[]> {
+    try {
+      const createdExpenses = await ExpenseModel.insertMany(
+        expenses.map((expense) => internalToDb(expense)),
+      );
+      return createdExpenses.map(dbToInternal);
+    } catch (error: any) {
+      serviceLogErrorHandler(error, {
+        eventName: 'ExpenseRepositoryWrite.createManyExpenses',
+        eventData: { count: expenses.length },
+      });
+      throw {
+        status: 500,
+        errorCode: EErrorCode.DATABASE_ERROR,
+      } as IThrowedError;
+    }
+  }
+
   async updateExpenseById(
     id: string,
     payload: Partial<IExpense>,
@@ -53,6 +71,26 @@ export class ExpenseRepositoryWrite implements IExpenseRepositoryWrite {
       serviceLogErrorHandler(error, {
         eventName: 'ExpenseRepositoryWrite.deleteExpenseById',
         eventData: { id },
+      });
+      throw {
+        status: 500,
+        errorCode: EErrorCode.DATABASE_ERROR,
+      } as IThrowedError;
+    }
+  }
+
+  async deleteExpensesByIds(ids: string[]): Promise<number> {
+    if (!ids.length) {
+      return 0;
+    }
+
+    try {
+      const result = await ExpenseModel.deleteMany({ id: { $in: ids } });
+      return result.deletedCount ?? 0;
+    } catch (error: any) {
+      serviceLogErrorHandler(error, {
+        eventName: 'ExpenseRepositoryWrite.deleteExpensesByIds',
+        eventData: { ids },
       });
       throw {
         status: 500,
