@@ -54,9 +54,9 @@ Playbooks when HTTP or naming is in scope:
 
 ### Light layer (smoke only)
 
-- Domain: no `infraestructure`, `mongoose`, `*Model`, `IM*` imports.
-- Controller: no `*Model`, no uniqueness/404 business rules.
-- Repository: return `null` on missing doc; no 404/409 throws.
+- Domain: no `infraestructure`, `mongoose`, `*Model`, `IM*`, `fs` imports; IDs via `generateId()`.
+- Controller: no `*Model`, no uniqueness/404 rules, no multi-service orchestration, no domain defaults.
+- Repository: return `null` on missing doc; no 404/409; `$set` payload as received (no nested-field merge).
 - Factory: wiring only, no product `if`.
 
 For full layer audit, recommend `agt-architecture-review`.
