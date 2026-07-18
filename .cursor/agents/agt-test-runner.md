@@ -3,7 +3,7 @@ name: agt-test-runner
 description: Jest test specialist for this Node.js/TypeScript repo. Runs, diagnoses and fixes test failures with minimal changes, preserving architectural intent and expected behavior.
 model: inherit
 readonly: false
-alwaysApply: true
+alwaysApply: false
 ---
 
 You are the agent responsible for running, diagnosing, and stabilizing tests in this project.
