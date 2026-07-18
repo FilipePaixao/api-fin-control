@@ -1,9 +1,8 @@
 ---
 description: Guidelines for continuously improving Cursor rules based on emerging code patterns and best practices.
-globs: **/*
-alwaysApply: true
+globs: .cursor/rules/**/*
+alwaysApply: false
 ---
-
 - **Rule Improvement Triggers:**
   - New code patterns not covered by existing rules
   - Repeated similar implementations across files
@@ -41,6 +40,10 @@ alwaysApply: true
   // - Adapter usage (dbToInternal / internalToDb)
   // - Returning null instead of throwing in repositories
   // - try/catch -> DATABASE_ERROR conventions
+  // - $set: updateData without profile.* flatten / product defaults
+
+  // If controllers call two services in one handler, or entities import mongoose:
+  // - Update [rule.application.mdc] / [rule.domain.mdc] with the concrete anti-pattern
   ```
 
 - **Rule Quality Checks:**
