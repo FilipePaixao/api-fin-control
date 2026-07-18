@@ -4,8 +4,11 @@ import { DashboardService } from '../../../../domain/dashboard/service/dashboard
 import { ECurrency } from '../../../../domain/user/entity/enums/ECurrency';
 import {
   createExpenseRepositoryReadMock,
+  createIncomeRepositoryReadMock,
   createUserRepositoryReadMock,
 } from '../../helpers/service-mocks.helper';
+import { EIncomeCategory } from '../../../../domain/income/entity/enums/EIncomeCategory';
+import { EIncomeStatus } from '../../../../domain/income/entity/enums/EIncomeStatus';
 
 describe('When getting dashboard summary with salary and expenses', () => {
   it('Should aggregate salary and expenses correctly', async () => {
@@ -45,9 +48,14 @@ describe('When getting dashboard summary with salary and expenses', () => {
       ]),
     });
 
+    const incomeRepositoryRead = createIncomeRepositoryReadMock({
+      listIncomes: jest.fn().mockResolvedValue([]),
+    });
+
     const service = new DashboardService({
       userRepositoryRead,
       expenseRepositoryRead,
+      incomeRepositoryRead,
     });
 
     const summary = await service.getDashboardSummary('user-1', '2026-06');
@@ -59,6 +67,9 @@ describe('When getting dashboard summary with salary and expenses', () => {
     });
     expect(summary.salary).toBe(5000);
     expect(summary.currency).toBe(ECurrency.BRL);
+    expect(summary.totalIncome).toBe(0);
+    expect(summary.effectiveIncome).toBe(5000);
+    expect(summary.usingSalaryFallback).toBe(true);
     expect(summary.totalExpenses).toBe(2400);
     expect(summary.totalPaid).toBe(1800);
     expect(summary.totalPending).toBe(600);
@@ -93,15 +104,20 @@ describe('When getting dashboard summary without salary', () => {
       ]),
     });
 
+    const incomeRepositoryRead = createIncomeRepositoryReadMock();
+
     const service = new DashboardService({
       userRepositoryRead,
       expenseRepositoryRead,
+      incomeRepositoryRead,
     });
 
     const summary = await service.getDashboardSummary('user-1');
 
     expect(summary.salary).toBeNull();
     expect(summary.currency).toBeNull();
+    expect(summary.effectiveIncome).toBeNull();
+    expect(summary.usingSalaryFallback).toBe(false);
     expect(summary.availableBalance).toBeNull();
     expect(summary.incomeCommitmentPercent).toBeNull();
     expect(summary.totalExpenses).toBe(180);
@@ -126,9 +142,12 @@ describe('When getting dashboard summary without expenses', () => {
       listExpenses: jest.fn().mockResolvedValue([]),
     });
 
+    const incomeRepositoryRead = createIncomeRepositoryReadMock();
+
     const service = new DashboardService({
       userRepositoryRead,
       expenseRepositoryRead,
+      incomeRepositoryRead,
     });
 
     const summary = await service.getDashboardSummary('user-1', '2026-07');
@@ -144,5 +163,63 @@ describe('When getting dashboard summary without expenses', () => {
     expect(summary.byCategory.every((categorySummary) => categorySummary.total === 0)).toBe(
       true,
     );
+  });
+});
+
+describe('When getting dashboard summary with monthly incomes', () => {
+  it('Should use total income instead of salary fallback', async () => {
+    const userRepositoryRead = createUserRepositoryReadMock({
+      findUserById: jest.fn().mockResolvedValue({
+        id: 'user-1',
+        name: 'Test User',
+        email: 'user-1@email.com',
+        salary: {
+          amount: 5000,
+          currency: ECurrency.BRL,
+        },
+      }),
+    });
+    const expenseRepositoryRead = createExpenseRepositoryReadMock({
+      listExpenses: jest.fn().mockResolvedValue([]),
+    });
+    const incomeRepositoryRead = createIncomeRepositoryReadMock({
+      listIncomes: jest.fn().mockResolvedValue([
+        {
+          id: 'income-1',
+          userId: 'user-1',
+          name: 'Salário CLT',
+          amount: 8000,
+          category: EIncomeCategory.SALARY,
+          status: EIncomeStatus.RECEIVED,
+          referenceMonth: '2026-06',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: 'income-2',
+          userId: 'user-1',
+          name: 'Freela',
+          amount: 1500,
+          category: EIncomeCategory.FREELANCE,
+          status: EIncomeStatus.RECEIVED,
+          referenceMonth: '2026-06',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ]),
+    });
+
+    const service = new DashboardService({
+      userRepositoryRead,
+      expenseRepositoryRead,
+      incomeRepositoryRead,
+    });
+
+    const summary = await service.getDashboardSummary('user-1', '2026-06');
+
+    expect(summary.totalIncome).toBe(9500);
+    expect(summary.effectiveIncome).toBe(9500);
+    expect(summary.usingSalaryFallback).toBe(false);
+    expect(summary.availableBalance).toBe(9500);
   });
 });
