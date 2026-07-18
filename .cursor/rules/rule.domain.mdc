@@ -1,15 +1,17 @@
 ---
 description: Domain layer — interfaces, entities, repo/service contracts
-alwaysApply: true
+globs: src/domain/**/*
+alwaysApply: false
 ---
-
 # Domain (`src/domain`)
 
 - Domain interfaces: prefix **`I`** (e.g. `IUser`, `IUserService`).
 - Contracts: `*.repository.read.ts` / `*.repository.write.ts` with `I*RepositoryRead` / `I*RepositoryWrite`.
 - Entities (`*ServiceEntity`): **local** object invariants (fields, format) in the constructor; file `<context>.entity.ts` in `entity/`. Do not query repository or validate uniqueness.
-- **Service** (`*.service.ts`): **only** place for orchestration and business rules (uniqueness, 404/409, flows, idempotency). Use entity + `I*RepositoryRead` / `I*RepositoryWrite` contracts.
-- **Forbidden in service:** import `src/infraestructure`, `mongoose`, `*Model`, `IM*` models, concrete Kafka producers.
-- Services depend only on repository interfaces and domain types.
+- **Service** (`*.service.ts`): **only** place for orchestration and business rules (uniqueness, 404/409, flows, idempotency, multi-step workflows). Use entity + `I*Repository*` / other domain ports.
+- **IDs:** use [`generateId()`](mdc:src/domain/common/utils/generate-id.ts) (`crypto.randomUUID`). Never `mongoose` / `Types.ObjectId` in domain.
+- **Forbidden in domain (entity + service + contracts):** import `src/infraestructure`, `mongoose`, `*Model`, `IM*`, concrete Kafka, `fs` / filesystem I/O, concrete HTTP clients, AWS SDK.
+- Side effects (files, HTTP, DB): depend on **ports** (`I*` interfaces) defined in domain; implementations live in infraestructure and are injected via factories.
+- Known debt (do not expand): [`server.ts`](mdc:src/domain/server/server.ts) still owns Mongo connect — treat as legacy; new code must not copy this pattern.
 - Detail and ❌/✅ examples: [rule.business-rules-layers.mdc](rule.business-rules-layers.mdc).
-- Messaging (optional scaffolding — no `messaging/` exists in `src/` yet): when added, keep **interfaces** only in `domain/<context>/messaging/<event>/` (e.g. `producer.interface.kafka.ts`); implementations go in infraestructure.
+- Messaging (optional scaffolding — no `messaging/` under `src/` yet): when added, keep **interfaces** only in `domain/<context>/messaging/<event>/`; implementations go in infraestructure.
