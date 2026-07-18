@@ -105,6 +105,8 @@ function createExpenseServiceMock(
     updateExpenseById: jest.fn(),
     deleteExpenseById: jest.fn(),
     payExpenseById: jest.fn(),
+    createInstallmentExpenses: jest.fn(),
+    deleteInstallmentGroup: jest.fn(),
     ...override,
   };
 }

@@ -4,6 +4,9 @@ import { EExpenseCategory } from '../../expense/entity/enums/EExpenseCategory';
 import { EExpenseStatus } from '../../expense/entity/enums/EExpenseStatus';
 import { ExpenseServiceEntity } from '../../expense/entity/expense.entity';
 import { IExpenseService } from '../../expense/interfaces/expense.service.interface';
+import { EIncomeCategory } from '../../income/entity/enums/EIncomeCategory';
+import { IncomeServiceEntity } from '../../income/entity/income.entity';
+import { IIncomeService } from '../../income/interfaces/income.service.interface';
 import { IRagService } from '../../rag/interfaces/rag.service.interface';
 import { ECurrency } from '../../user/entity/enums/ECurrency';
 import { UserServiceEntity } from '../../user/entity/user.entity';
@@ -17,6 +20,7 @@ import {
 
 interface IParamsAgentActionService {
   expenseService: IExpenseService;
+  incomeService: IIncomeService;
   userService: IUserService;
   ragService: IRagService;
   conversationService: IConversationService;
@@ -24,17 +28,20 @@ interface IParamsAgentActionService {
 
 export class AgentActionService implements IAgentActionService {
   private readonly expenseService: IExpenseService;
+  private readonly incomeService: IIncomeService;
   private readonly userService: IUserService;
   private readonly ragService: IRagService;
   private readonly conversationService: IConversationService;
 
   constructor({
     expenseService,
+    incomeService,
     userService,
     ragService,
     conversationService,
   }: IParamsAgentActionService) {
     this.expenseService = expenseService;
+    this.incomeService = incomeService;
     this.userService = userService;
     this.ragService = ragService;
     this.conversationService = conversationService;
@@ -54,6 +61,9 @@ export class AgentActionService implements IAgentActionService {
     switch (input.type) {
       case EAgentActionType.CREATE_EXPENSE:
         result = await this.executeCreateExpense(userId, payload);
+        break;
+      case EAgentActionType.CREATE_INCOME:
+        result = await this.executeCreateIncome(userId, payload);
         break;
       case EAgentActionType.UPDATE_SALARY:
         result = await this.executeUpdateSalary(userId, payload);
@@ -88,6 +98,33 @@ export class AgentActionService implements IAgentActionService {
       typeof payload.dueDate === 'string' && payload.dueDate
         ? new Date(payload.dueDate)
         : undefined;
+    const totalInstallments = Number(payload.totalInstallments);
+    const totalAmount = Number(payload.totalAmount ?? payload.amount);
+
+    if (totalInstallments >= 2) {
+      const expenses = await this.expenseService.createInstallmentExpenses(userId, {
+        userId,
+        name,
+        totalAmount,
+        totalInstallments,
+        category,
+        referenceMonth,
+        description,
+        dueDate,
+      });
+
+      await this.syncRagSafely(userId);
+
+      return {
+        success: true,
+        message: `${expenses.length} parcelas de "${name}" cadastradas com sucesso.`,
+        data: {
+          installmentGroupId: expenses[0]?.installmentGroupId,
+          totalInstallments: expenses.length,
+          totalAmount,
+        },
+      };
+    }
 
     try {
       ExpenseServiceEntity.validateExpenseInput({
@@ -130,6 +167,57 @@ export class AgentActionService implements IAgentActionService {
         amount: expense.amount,
         category: expense.category,
         referenceMonth: expense.referenceMonth,
+      },
+    };
+  }
+
+  private async executeCreateIncome(
+    userId: string,
+    payload: Record<string, unknown>,
+  ): Promise<IExecuteAgentActionResult> {
+    const name = String(payload.name ?? '').trim();
+    const amount = Number(payload.amount);
+    const category = payload.category as EIncomeCategory;
+    const referenceMonth = String(payload.referenceMonth ?? '').trim();
+    const source = typeof payload.source === 'string' ? payload.source.trim() : undefined;
+
+    try {
+      IncomeServiceEntity.validateIncomeInput({
+        userId,
+        name,
+        amount,
+        category,
+        referenceMonth,
+        source,
+      });
+    } catch (error) {
+      throw {
+        status: 400,
+        errorCode: EErrorCode.FIELD_INVALID,
+        message: error instanceof Error ? error.message : 'Invalid income payload',
+      } as IThrowedError;
+    }
+
+    const income = await this.incomeService.createIncome(userId, {
+      userId,
+      name,
+      amount,
+      category,
+      referenceMonth,
+      source,
+    });
+
+    await this.syncRagSafely(userId);
+
+    return {
+      success: true,
+      message: `Entrada "${income.name}" cadastrada com sucesso.`,
+      data: {
+        id: income.id,
+        name: income.name,
+        amount: income.amount,
+        category: income.category,
+        referenceMonth: income.referenceMonth,
       },
     };
   }
