@@ -9,6 +9,7 @@ import { postgresSetup } from './infraestructure/db/postgres/postgres.setup';
 import { UserControllerFactory } from './configuration/factory/user.controller.factory';
 import { AuthControllerFactory } from './configuration/factory/auth.controller.factory';
 import { ExpenseControllerFactory } from './configuration/factory/expense.controller.factory';
+import { IncomeControllerFactory } from './configuration/factory/income.controller.factory';
 import { DashboardControllerFactory } from './configuration/factory/dashboard.controller.factory';
 import { RagControllerFactory } from './configuration/factory/rag.controller.factory';
 import { AgentControllerFactory } from './configuration/factory/agent.controller.factory';
@@ -28,6 +29,7 @@ const app = new Server({
     UserControllerFactory.create(),
     AuthControllerFactory.create(),
     ExpenseControllerFactory.create(),
+    IncomeControllerFactory.create(),
     DashboardControllerFactory.create(),
     RagControllerFactory.create(),
     AgentControllerFactory.create(),

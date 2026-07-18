@@ -1,5 +1,6 @@
 import { DashboardService } from '../../domain/dashboard/service/dashboard.service';
 import { ExpenseRepositoryRead } from '../../infraestructure/repository/expense/expense.repository.read';
+import { IncomeRepositoryRead } from '../../infraestructure/repository/income/income.repository.read';
 import { UserRepositoryRead } from '../../infraestructure/repository/user/user.repository.read';
 
 export class DashboardServiceFactory {
@@ -7,6 +8,7 @@ export class DashboardServiceFactory {
     return new DashboardService({
       userRepositoryRead: new UserRepositoryRead(),
       expenseRepositoryRead: new ExpenseRepositoryRead(),
+      incomeRepositoryRead: new IncomeRepositoryRead(),
     });
   }
 }
