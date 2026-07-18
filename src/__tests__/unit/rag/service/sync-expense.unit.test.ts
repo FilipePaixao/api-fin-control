@@ -21,6 +21,7 @@ describe('When syncing a single expense', () => {
         findExpenseById: jest.fn(),
         findExpensesByIds: jest.fn(),
         listExpenses: jest.fn(),
+        listExpensesByInstallmentGroupId: jest.fn(),
       },
       vectorStoreRepository,
       embeddingProvider,
