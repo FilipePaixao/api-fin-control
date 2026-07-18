@@ -7,7 +7,22 @@ import { AgentActionService } from '../../../../domain/agent/service/agent-actio
 import { IConversationService } from '../../../../domain/agent/interfaces/conversation.service.interface';
 import { IExpenseService } from '../../../../domain/expense/interfaces/expense.service.interface';
 import { IRagService } from '../../../../domain/rag/interfaces/rag.service.interface';
+import { IIncomeService } from '../../../../domain/income/interfaces/income.service.interface';
 import { IUserService } from '../../../../domain/user/interfaces/user.service.interface';
+
+function createIncomeServiceMock(
+  override: Partial<IIncomeService> = {},
+): IIncomeService {
+  return {
+    createIncome: jest.fn(),
+    listIncomes: jest.fn(),
+    getIncomeById: jest.fn(),
+    updateIncomeById: jest.fn(),
+    deleteIncomeById: jest.fn(),
+    receiveIncomeById: jest.fn(),
+    ...override,
+  };
+}
 
 function createExpenseServiceMock(
   override: Partial<IExpenseService> = {},
@@ -19,6 +34,8 @@ function createExpenseServiceMock(
     updateExpenseById: jest.fn(),
     deleteExpenseById: jest.fn(),
     payExpenseById: jest.fn(),
+    createInstallmentExpenses: jest.fn(),
+    deleteInstallmentGroup: jest.fn(),
     ...override,
   };
 }
@@ -87,6 +104,7 @@ describe('When executing CREATE_EXPENSE action in AgentActionService', () => {
 
     const service = new AgentActionService({
       expenseService,
+      incomeService: createIncomeServiceMock(),
       userService: createUserServiceMock(),
       ragService,
       conversationService: createConversationServiceMock(),
@@ -122,6 +140,7 @@ describe('When executing CREATE_EXPENSE action in AgentActionService', () => {
 
     const service = new AgentActionService({
       expenseService,
+      incomeService: createIncomeServiceMock(),
       userService: createUserServiceMock(),
       ragService: createRagServiceMock(),
       conversationService,
@@ -162,6 +181,7 @@ describe('When executing UPDATE_SALARY action in AgentActionService', () => {
 
     const service = new AgentActionService({
       expenseService: createExpenseServiceMock(),
+      incomeService: createIncomeServiceMock(),
       userService,
       ragService,
       conversationService: createConversationServiceMock(),
@@ -186,6 +206,7 @@ describe('When executing action with invalid expense payload in AgentActionServi
   it('Should reject with FIELD_INVALID', async () => {
     const service = new AgentActionService({
       expenseService: createExpenseServiceMock(),
+      incomeService: createIncomeServiceMock(),
       userService: createUserServiceMock(),
       ragService: createRagServiceMock(),
       conversationService: createConversationServiceMock(),
@@ -207,6 +228,7 @@ describe('When executing action with invalid type in AgentActionService', () => 
   it('Should reject with FIELD_INVALID', async () => {
     const service = new AgentActionService({
       expenseService: createExpenseServiceMock(),
+      incomeService: createIncomeServiceMock(),
       userService: createUserServiceMock(),
       ragService: createRagServiceMock(),
       conversationService: createConversationServiceMock(),
@@ -225,6 +247,7 @@ describe('When executing action with invalid payload in AgentActionService', () 
   it('Should reject with FIELD_INVALID', async () => {
     const service = new AgentActionService({
       expenseService: createExpenseServiceMock(),
+      incomeService: createIncomeServiceMock(),
       userService: createUserServiceMock(),
       ragService: createRagServiceMock(),
       conversationService: createConversationServiceMock(),
