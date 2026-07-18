@@ -1,5 +1,6 @@
 import { EExpenseCategory } from '../../expense/entity/enums/EExpenseCategory';
 import { EExpenseStatus } from '../../expense/entity/enums/EExpenseStatus';
+import { EIncomeCategory } from '../../income/entity/enums/EIncomeCategory';
 import { ECurrency } from '../../user/entity/enums/ECurrency';
 
 export interface IDashboardByCategory {
@@ -8,6 +9,13 @@ export interface IDashboardByCategory {
   paid: number;
   pending: number;
   overdue: number;
+}
+
+export interface IDashboardByIncomeCategory {
+  category: EIncomeCategory;
+  total: number;
+  received: number;
+  expected: number;
 }
 
 export interface IDashboardTopExpense {
@@ -23,12 +31,16 @@ export interface IDashboardTopExpense {
 export interface IDashboardSummary {
   salary: number | null;
   currency: ECurrency | null;
+  totalIncome: number;
+  effectiveIncome: number | null;
+  usingSalaryFallback: boolean;
   totalExpenses: number;
   totalPaid: number;
   totalPending: number;
   totalOverdue: number;
   availableBalance: number | null;
   incomeCommitmentPercent: number | null;
+  incomesByCategory: IDashboardByIncomeCategory[];
   byCategory: IDashboardByCategory[];
   topExpenses: IDashboardTopExpense[];
 }
