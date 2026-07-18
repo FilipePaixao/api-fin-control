@@ -1,7 +1,7 @@
 import { EExpenseCategory } from '../entity/enums/EExpenseCategory';
 import { EExpenseStatus } from '../entity/enums/EExpenseStatus';
 import { EPaymentMethod } from '../entity/enums/EPaymentMethod';
-import { ICreateExpenseInput, IExpense } from '../entity/interfaces/expense.interface';
+import { ICreateExpenseInput, ICreateInstallmentExpenseInput, IExpense } from '../entity/interfaces/expense.interface';
 import { IExpenseRepositoryRead } from '../repository/expense.repository.read';
 import { IExpenseRepositoryWrite } from '../repository/expense.repository.write';
 import { IExpenseIndexRepository } from '../../expense-search/interfaces/expense-index.repository';
@@ -15,6 +15,7 @@ export interface IExpenseFilters {
   from?: Date;
   to?: Date;
   search?: string;
+  installmentGroupId?: string;
 }
 
 export interface IUpdateExpenseInput {
@@ -56,4 +57,9 @@ export interface IExpenseService {
     expenseId: string,
     payload: IPayExpenseInput,
   ): Promise<IExpense>;
+  createInstallmentExpenses(
+    userId: string,
+    payload: ICreateInstallmentExpenseInput,
+  ): Promise<IExpense[]>;
+  deleteInstallmentGroup(userId: string, installmentGroupId: string): Promise<void>;
 }
