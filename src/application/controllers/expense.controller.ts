@@ -91,6 +91,7 @@ export class ExpenseController implements IController {
         to: req.query.to ? new Date(String(req.query.to)) : undefined,
         search: req.query.search ? String(req.query.search) : undefined,
         installmentGroupId: req.query.installmentGroupId as string | undefined,
+        creditCardId: req.query.creditCardId as string | undefined,
       });
       res.status(200).json(expenses);
     } catch (error) {
