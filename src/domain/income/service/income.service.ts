@@ -28,6 +28,24 @@ export class IncomeService implements IIncomeService {
     return this.incomeRepositoryWrite.createIncome(incomeEntity);
   }
 
+  async createManyIncomes(
+    userId: string,
+    payloads: ICreateIncomeInput[],
+  ): Promise<IIncome[]> {
+    if (!payloads.length) {
+      return [];
+    }
+
+    const incomes = payloads.map(
+      (payload) =>
+        new IncomeServiceEntity({
+          ...payload,
+          userId,
+        }),
+    );
+    return this.incomeRepositoryWrite.createManyIncomes(incomes);
+  }
+
   async listIncomes(userId: string, filters: IIncomeFilters): Promise<IIncome[]> {
     return this.incomeRepositoryRead.listIncomes({
       userId,
