@@ -15,7 +15,7 @@ import {
 interface OllamaToolCall {
   function: {
     name: string;
-    arguments: Record<string, unknown>;
+    arguments: Record<string, unknown> | string;
   };
 }
 
@@ -124,7 +124,7 @@ export class OllamaLlmProvider implements ILlmProvider {
       (toolCall, index) => ({
         id: `call-${index}`,
         name: toolCall.function.name,
-        arguments: toolCall.function.arguments ?? {},
+        arguments: this.parseToolArguments(toolCall.function.arguments),
       }),
     );
 
@@ -133,5 +133,27 @@ export class OllamaLlmProvider implements ILlmProvider {
       content: message.content ?? '',
       toolCalls: toolCalls?.length ? toolCalls : undefined,
     };
+  }
+
+  private parseToolArguments(
+    raw: Record<string, unknown> | string | undefined,
+  ): Record<string, unknown> {
+    if (!raw) {
+      return {};
+    }
+    if (typeof raw === 'object' && !Array.isArray(raw)) {
+      return raw;
+    }
+    if (typeof raw === 'string') {
+      try {
+        const parsed = JSON.parse(raw) as unknown;
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          return parsed as Record<string, unknown>;
+        }
+      } catch {
+        return {};
+      }
+    }
+    return {};
   }
 }
