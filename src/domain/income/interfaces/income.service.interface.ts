@@ -31,6 +31,7 @@ export interface IParamsIncomeService {
 
 export interface IIncomeService {
   createIncome(userId: string, payload: ICreateIncomeInput): Promise<IIncome>;
+  createManyIncomes(userId: string, payloads: ICreateIncomeInput[]): Promise<IIncome[]>;
   listIncomes(userId: string, filters: IIncomeFilters): Promise<IIncome[]>;
   getIncomeById(userId: string, incomeId: string): Promise<IIncome>;
   updateIncomeById(
