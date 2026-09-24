@@ -100,6 +100,7 @@ function createExpenseServiceMock(
 ): IExpenseService {
   return {
     createExpense: jest.fn(),
+    createManyExpenses: jest.fn(),
     listExpenses: jest.fn(),
     getExpenseById: jest.fn(),
     updateExpenseById: jest.fn(),
@@ -284,6 +285,78 @@ describe('When LLM proposes create expense via tool in AgentService', () => {
     expect(response.proposedActions).toHaveLength(1);
     expect(response.proposedActions?.[0].type).toBe(EAgentActionType.CREATE_EXPENSE);
     expect(expenseService.createExpense).not.toHaveBeenCalled();
+  });
+
+  it('Should return proposed CREATE_INCOME action without persisting', async () => {
+    const llmProvider = createLlmProviderMock({
+      chat: jest
+        .fn()
+        .mockResolvedValueOnce({
+          message: {
+            role: 'assistant',
+            content: '',
+            toolCalls: [
+              {
+                name: 'propose_create_income',
+                arguments: {
+                  name: 'Freelance',
+                  amount: 2000,
+                  category: 'FREELANCE',
+                  referenceMonth: '2026-06',
+                },
+              },
+            ],
+          },
+          done: false,
+        })
+        .mockResolvedValueOnce({
+          message: {
+            role: 'assistant',
+            content: 'Entrada proposta. Confirme na interface.',
+          },
+          done: true,
+        }),
+    });
+
+    const incomeService = {
+      createIncome: jest.fn(),
+      createManyIncomes: jest.fn(),
+      listIncomes: jest.fn().mockResolvedValue([]),
+      getIncomeById: jest.fn(),
+      updateIncomeById: jest.fn(),
+      deleteIncomeById: jest.fn(),
+      receiveIncomeById: jest.fn(),
+    };
+
+    const service = new AgentService({
+      llmProvider,
+      dashboardService: createDashboardServiceMock(),
+      expenseService: createExpenseServiceMock(),
+      incomeService,
+      conversationService: createConversationServiceMock({
+        getRecentMessages: jest.fn().mockResolvedValue([
+          {
+            id: 'msg-1',
+            conversationId: 'conv-1',
+            userId: 'user-1',
+            role: EChatMessageRole.USER,
+            content: 'Cadastra entrada',
+            createdAt: new Date(),
+          },
+        ]),
+      }),
+      userRepositoryRead: createUserRepositoryReadMock(),
+      systemPrompt: TEST_SYSTEM_PROMPT,
+    });
+
+    const response = await service.chat('user-1', {
+      conversationId: 'conv-1',
+      message: 'Cadastra freela de 2000',
+    });
+
+    expect(response.proposedActions).toHaveLength(1);
+    expect(response.proposedActions?.[0].type).toBe(EAgentActionType.CREATE_INCOME);
+    expect(incomeService.createIncome).not.toHaveBeenCalled();
   });
 
   it('Should default referenceMonth to current month when omitted in propose_create_expense', async () => {
