@@ -8,6 +8,8 @@ import { ExpenseControllerFactory } from '../configuration/factory/expense.contr
 import { IncomeControllerFactory } from '../configuration/factory/income.controller.factory';
 import { OnboardingControllerFactory } from '../configuration/factory/onboarding.controller.factory';
 import { RagControllerFactory } from '../configuration/factory/rag.controller.factory';
+import { StatementImportControllerFactory } from '../configuration/factory/statement-import.controller.factory';
+import { CreditCardControllerFactory } from '../configuration/factory/credit-card.controller.factory';
 import { UserControllerFactory } from '../configuration/factory/user.controller.factory';
 
 const OPEN_API_SPEC_FILE_LOCATION = path.resolve(
@@ -22,11 +24,13 @@ export const app = new Server({
     AuthControllerFactory.create(),
     ExpenseControllerFactory.create(),
     IncomeControllerFactory.create(),
+    CreditCardControllerFactory.create(),
     DashboardControllerFactory.create(),
     RagControllerFactory.create(),
     AgentControllerFactory.create(),
     AddressControllerFactory.create(),
     OnboardingControllerFactory.create(),
+    StatementImportControllerFactory.create(),
   ],
   databaseURI: process.env.DATABASE_URI,
   apiSpecLocation: OPEN_API_SPEC_FILE_LOCATION,
