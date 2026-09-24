@@ -1,6 +1,7 @@
 import { ExpenseService } from '../../../../domain/expense/service/expense.service';
 import { EExpenseCategory } from '../../../../domain/expense/entity/enums/EExpenseCategory';
 import { EExpenseStatus } from '../../../../domain/expense/entity/enums/EExpenseStatus';
+import { EErrorCode } from '../../../../domain/common/errors/enums/EErrorCode';
 import {
   createExpenseRepositoryReadMock,
   createExpenseRepositoryWriteMock,
@@ -27,6 +28,33 @@ describe('When creating an expense with valid payload', () => {
 
     expect(result.userId).toBe('user-1');
     expect(result.status).toBe(EExpenseStatus.PENDING);
+  });
+
+  it('Should reject unknown creditCardId', async () => {
+    const expenseRepositoryRead = createExpenseRepositoryReadMock();
+    const expenseRepositoryWrite = createExpenseRepositoryWriteMock();
+    const expenseService = new ExpenseService({
+      expenseRepositoryRead,
+      expenseRepositoryWrite,
+      creditCardRepositoryRead: {
+        findById: jest.fn().mockResolvedValue(null),
+        listByUserId: jest.fn().mockResolvedValue([]),
+      },
+    });
+
+    await expect(
+      expenseService.createExpense('user-1', {
+        userId: 'user-1',
+        name: 'Internet',
+        amount: 120,
+        category: EExpenseCategory.SUBSCRIPTIONS,
+        referenceMonth: '2026-06',
+        creditCardId: 'missing-card',
+      }),
+    ).rejects.toMatchObject({
+      status: 404,
+      errorCode: EErrorCode.RESOURCE_NOT_FOUND,
+    });
   });
 });
 
