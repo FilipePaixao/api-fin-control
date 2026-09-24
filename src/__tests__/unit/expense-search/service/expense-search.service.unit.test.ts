@@ -92,6 +92,56 @@ describe('When searching expenses with a text query', () => {
       expect.arrayContaining(['expense-1', 'expense-2']),
     );
   });
+
+  it('Should exclude expenses that do not match creditCardId after ranking', async () => {
+    const expenseRepositoryRead = createExpenseRepositoryReadMock({
+      findExpensesByIds: jest.fn().mockResolvedValue([
+        {
+          id: 'expense-1',
+          userId: 'user-1',
+          name: 'Netflix',
+          amount: 55,
+          category: EExpenseCategory.SUBSCRIPTIONS,
+          status: EExpenseStatus.PENDING,
+          referenceMonth: '2026-06',
+          creditCardId: 'card-1',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: 'expense-2',
+          userId: 'user-1',
+          name: 'Spotify',
+          amount: 21,
+          category: EExpenseCategory.SUBSCRIPTIONS,
+          status: EExpenseStatus.PENDING,
+          referenceMonth: '2026-06',
+          creditCardId: 'card-2',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ]),
+    });
+    const expenseIndexRepository = createExpenseIndexRepositoryMock({
+      search: jest.fn().mockResolvedValue(['expense-1', 'expense-2']),
+    });
+    const ragService = createRagServiceMock({
+      searchExpenses: jest.fn().mockResolvedValue(['expense-2', 'expense-1']),
+    });
+
+    const service = new ExpenseSearchService({
+      expenseRepositoryRead,
+      expenseIndexRepository,
+      ragService,
+    });
+
+    const result = await service.searchExpenses('user-1', {
+      search: 'assinatura',
+      creditCardId: 'card-1',
+    });
+
+    expect(result.map((expense) => expense.id)).toEqual(['expense-1']);
+  });
 });
 
 describe('When searching expenses without text', () => {
@@ -106,7 +156,11 @@ describe('When searching expenses without text', () => {
       ragService: createRagServiceMock(),
     });
 
-    await service.searchExpenses('user-1', { referenceMonth: '2026-06' });
+    await service.searchExpenses('user-1', {
+      referenceMonth: '2026-06',
+      creditCardId: 'card-1',
+      installmentGroupId: 'group-1',
+    });
 
     expect(expenseRepositoryRead.listExpenses).toHaveBeenCalledWith({
       userId: 'user-1',
@@ -115,6 +169,8 @@ describe('When searching expenses without text', () => {
       status: undefined,
       from: undefined,
       to: undefined,
+      installmentGroupId: 'group-1',
+      creditCardId: 'card-1',
     });
   });
 });

@@ -11,6 +11,7 @@ import { IController } from './interfaces/IController';
 import mongoose from 'mongoose';
 import * as OpenApiValidator from 'express-openapi-validator';
 import helmet from 'helmet';
+import multer from 'multer';
 import { HttpError } from 'express-openapi-validator/dist/framework/types';
 
 
@@ -69,6 +70,12 @@ export class Server {
         apiSpec: this.apiSpecLocation || '',
         validateApiSpec: true,
         validateResponses: true,
+        // Upload de PDF é tratado pelo multer da rota /imports/analyze (memoryStorage).
+        // Mantém true só para o OpenAPI aceitar multipart no schema; storage em memória.
+        fileUploader: {
+          storage: multer.memoryStorage(),
+          limits: { fileSize: 10 * 1024 * 1024 },
+        },
       }),
     );
   }

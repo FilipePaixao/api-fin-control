@@ -75,6 +75,7 @@ export function createIncomeRepositoryWriteMock(
 ): IIncomeRepositoryWrite {
   return {
     createIncome: jest.fn(),
+    createManyIncomes: jest.fn(),
     updateIncomeById: jest.fn(),
     deleteIncomeById: jest.fn(),
     ...override,

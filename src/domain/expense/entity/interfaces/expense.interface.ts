@@ -18,6 +18,7 @@ export interface IExpense {
   installmentNumber?: number;
   totalInstallments?: number;
   totalAmount?: number;
+  creditCardId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -31,11 +32,13 @@ export interface ICreateExpenseInput {
   paymentMethod?: EPaymentMethod;
   status?: EExpenseStatus;
   dueDate?: Date;
+  paidAt?: Date;
   referenceMonth: string;
   installmentGroupId?: string;
   installmentNumber?: number;
   totalInstallments?: number;
   totalAmount?: number;
+  creditCardId?: string;
 }
 
 export interface ICreateInstallmentExpenseInput {
@@ -48,4 +51,5 @@ export interface ICreateInstallmentExpenseInput {
   paymentMethod?: EPaymentMethod;
   dueDate?: Date;
   referenceMonth: string;
+  creditCardId?: string;
 }

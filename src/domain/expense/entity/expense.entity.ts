@@ -25,6 +25,7 @@ export class ExpenseServiceEntity implements IExpense {
   installmentNumber?: number;
   totalInstallments?: number;
   totalAmount?: number;
+  creditCardId?: string;
   createdAt: Date;
   updatedAt: Date;
 
@@ -48,6 +49,7 @@ export class ExpenseServiceEntity implements IExpense {
     this.installmentNumber = expense.installmentNumber;
     this.totalInstallments = expense.totalInstallments;
     this.totalAmount = expense.totalAmount;
+    this.creditCardId = expense.creditCardId;
     this.createdAt =
       'createdAt' in expense && expense.createdAt
         ? expense.createdAt

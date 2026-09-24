@@ -26,6 +26,7 @@ export const ExpenseSchema = new Schema<IMExpense>(
     installmentNumber: { type: Number, min: 1 },
     totalInstallments: { type: Number, min: 2 },
     totalAmount: { type: Number, min: 0 },
+    creditCardId: { type: String },
   },
   { timestamps: true },
 );
@@ -34,3 +35,4 @@ ExpenseSchema.index({ userId: 1, dueDate: -1 });
 ExpenseSchema.index({ userId: 1, category: 1 });
 ExpenseSchema.index({ userId: 1, status: 1 });
 ExpenseSchema.index({ userId: 1, referenceMonth: 1, status: 1, category: 1 });
+ExpenseSchema.index({ userId: 1, creditCardId: 1, referenceMonth: 1 });

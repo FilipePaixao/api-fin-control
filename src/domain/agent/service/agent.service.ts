@@ -12,6 +12,10 @@ import { EExpenseCategory } from '../../expense/entity/enums/EExpenseCategory';
 import { EExpenseStatus } from '../../expense/entity/enums/EExpenseStatus';
 import { ExpenseServiceEntity } from '../../expense/entity/expense.entity';
 import { IExpenseService } from '../../expense/interfaces/expense.service.interface';
+import { EIncomeCategory } from '../../income/entity/enums/EIncomeCategory';
+import { EIncomeStatus } from '../../income/entity/enums/EIncomeStatus';
+import { IncomeServiceEntity } from '../../income/entity/income.entity';
+import { IIncomeService } from '../../income/interfaces/income.service.interface';
 import { ECurrency } from '../../user/entity/enums/ECurrency';
 import { UserServiceEntity } from '../../user/entity/user.entity';
 import { EAgentActionType } from '../entity/enums/EAgentActionType';
@@ -41,6 +45,7 @@ interface IParamsAgentService {
   llmProvider: ILlmProvider;
   dashboardService: IDashboardService;
   expenseService: IExpenseService;
+  incomeService?: IIncomeService;
   conversationService: IConversationService;
   userRepositoryRead: IUserRepositoryRead;
   systemPrompt: string;
@@ -52,6 +57,7 @@ export class AgentService implements IAgentService {
   private readonly llmProvider: ILlmProvider;
   private readonly dashboardService: IDashboardService;
   private readonly expenseService: IExpenseService;
+  private readonly incomeService?: IIncomeService;
   private readonly conversationService: IConversationService;
   private readonly userRepositoryRead: IUserRepositoryRead;
   private readonly systemPrompt: string;
@@ -62,6 +68,7 @@ export class AgentService implements IAgentService {
     llmProvider,
     dashboardService,
     expenseService,
+    incomeService,
     conversationService,
     userRepositoryRead,
     systemPrompt,
@@ -71,6 +78,7 @@ export class AgentService implements IAgentService {
     this.llmProvider = llmProvider;
     this.dashboardService = dashboardService;
     this.expenseService = expenseService;
+    this.incomeService = incomeService;
     this.conversationService = conversationService;
     this.userRepositoryRead = userRepositoryRead;
     this.systemPrompt = systemPrompt;
@@ -80,7 +88,14 @@ export class AgentService implements IAgentService {
 
   async chat(userId: string, request: IAgentChatRequest): Promise<IAgentChatResponse> {
     const user = await this.userRepositoryRead.findUserById(userId);
-    if (!user || !isOnboardingComplete(user.profile)) {
+    if (!user) {
+      throw {
+        status: 404,
+        errorCode: EErrorCode.RESOURCE_NOT_FOUND,
+        message: 'User not found',
+      } as IThrowedError;
+    }
+    if (!isOnboardingComplete(user.profile)) {
       throw {
         status: 403,
         errorCode: EErrorCode.ONBOARDING_INCOMPLETE,
@@ -355,8 +370,12 @@ ${globalKnowledgeContext}`);
         return this.toolGetFinancialSummary(userId, args);
       case 'list_expenses':
         return this.toolListExpenses(userId, args);
+      case 'list_incomes':
+        return this.toolListIncomes(userId, args);
       case 'propose_create_expense':
         return this.toolProposeCreateExpense(userId, args, proposedActions);
+      case 'propose_create_income':
+        return this.toolProposeCreateIncome(userId, args, proposedActions);
       case 'propose_update_salary':
         return this.toolProposeUpdateSalary(args, proposedActions);
       case 'get_regional_cost_profile':
@@ -412,6 +431,33 @@ ${globalKnowledgeContext}`);
         status: expense.status,
         referenceMonth: expense.referenceMonth,
         dueDate: expense.dueDate?.toISOString(),
+      })),
+    );
+  }
+
+  private async toolListIncomes(
+    userId: string,
+    args: Record<string, unknown>,
+  ): Promise<string> {
+    if (!this.incomeService) {
+      return JSON.stringify({ error: 'Income service unavailable' });
+    }
+
+    const incomes = await this.incomeService.listIncomes(userId, {
+      referenceMonth: resolveReferenceMonth(args.referenceMonth),
+      category: this.parseIncomeCategory(args.category),
+      status: this.parseIncomeStatus(args.status),
+    });
+    return JSON.stringify(
+      incomes.map((income) => ({
+        id: income.id,
+        name: income.name,
+        amount: income.amount,
+        category: income.category,
+        status: income.status,
+        referenceMonth: income.referenceMonth,
+        receivedAt: income.receivedAt?.toISOString(),
+        source: income.source,
       })),
     );
   }
@@ -480,6 +526,72 @@ ${globalKnowledgeContext}`);
       status: 'proposed',
       actionId: action.id,
       message: 'Despesa proposta. Aguardando confirmação do usuário na interface.',
+    });
+  }
+
+  private toolProposeCreateIncome(
+    userId: string,
+    args: Record<string, unknown>,
+    proposedActions: IProposedAction[],
+  ): string {
+    const name = String(args.name ?? '').trim();
+    const amount = Number(args.amount);
+    const category = this.parseIncomeCategory(args.category);
+    const referenceMonth = resolveReferenceMonth(args.referenceMonth);
+    const status = this.parseIncomeStatus(args.status) ?? EIncomeStatus.EXPECTED;
+    const source = typeof args.source === 'string' ? args.source.trim() : undefined;
+    const receivedAt =
+      typeof args.receivedAt === 'string' && args.receivedAt
+        ? new Date(args.receivedAt)
+        : undefined;
+
+    if (!name || !category || !Number.isFinite(amount)) {
+      return JSON.stringify({
+        error: 'Missing or invalid fields: name, amount, category are required',
+      });
+    }
+
+    try {
+      IncomeServiceEntity.validateIncomeInput({
+        userId,
+        name,
+        amount,
+        category,
+        referenceMonth,
+        status,
+        source,
+        receivedAt,
+      });
+    } catch (error) {
+      return JSON.stringify({
+        error: error instanceof Error ? error.message : 'Invalid income payload',
+      });
+    }
+
+    const payload: Record<string, unknown> = {
+      name,
+      amount,
+      category,
+      referenceMonth,
+      status,
+    };
+    if (source) payload.source = source;
+    if (receivedAt && !Number.isNaN(receivedAt.getTime())) {
+      payload.receivedAt = receivedAt.toISOString();
+    }
+
+    const action: IProposedAction = {
+      id: randomUUID(),
+      type: EAgentActionType.CREATE_INCOME,
+      summary: `Cadastrar entrada "${name}" — R$ ${amount.toFixed(2)} (${category})`,
+      payload,
+    };
+    proposedActions.push(action);
+
+    return JSON.stringify({
+      status: 'proposed',
+      actionId: action.id,
+      message: 'Entrada proposta. Aguardando confirmação do usuário na interface.',
     });
   }
 
@@ -590,6 +702,20 @@ ${globalKnowledgeContext}`);
     if (typeof value !== 'string') return undefined;
     return Object.values(EExpenseStatus).includes(value as EExpenseStatus)
       ? (value as EExpenseStatus)
+      : undefined;
+  }
+
+  private parseIncomeCategory(value: unknown): EIncomeCategory | undefined {
+    if (typeof value !== 'string') return undefined;
+    return Object.values(EIncomeCategory).includes(value as EIncomeCategory)
+      ? (value as EIncomeCategory)
+      : undefined;
+  }
+
+  private parseIncomeStatus(value: unknown): EIncomeStatus | undefined {
+    if (typeof value !== 'string') return undefined;
+    return Object.values(EIncomeStatus).includes(value as EIncomeStatus)
+      ? (value as EIncomeStatus)
       : undefined;
   }
 }

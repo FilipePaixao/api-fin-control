@@ -18,10 +18,12 @@ import {
 } from '../entity/interfaces/expense.interface';
 import { toExpenseIndexDocument } from '../utils/expense-index-document.utils';
 import { buildInstallmentName, splitInstallmentAmounts } from '../utils/installment.utils';
+import { resolveExpenseStatus, resolveExpensesStatus } from '../utils/expense-status.utils';
 
 export class ExpenseService implements IExpenseService {
   private readonly expenseRepositoryRead: IParamsExpenseService['expenseRepositoryRead'];
   private readonly expenseRepositoryWrite: IParamsExpenseService['expenseRepositoryWrite'];
+  private readonly creditCardRepositoryRead?: IParamsExpenseService['creditCardRepositoryRead'];
   private readonly expenseSearchService?: IParamsExpenseService['expenseSearchService'];
   private readonly expenseIndexRepository?: IParamsExpenseService['expenseIndexRepository'];
   private readonly ragService?: IParamsExpenseService['ragService'];
@@ -29,41 +31,91 @@ export class ExpenseService implements IExpenseService {
   constructor({
     expenseRepositoryRead,
     expenseRepositoryWrite,
+    creditCardRepositoryRead,
     expenseSearchService,
     expenseIndexRepository,
     ragService,
   }: IParamsExpenseService) {
     this.expenseRepositoryRead = expenseRepositoryRead;
     this.expenseRepositoryWrite = expenseRepositoryWrite;
+    this.creditCardRepositoryRead = creditCardRepositoryRead;
     this.expenseSearchService = expenseSearchService;
     this.expenseIndexRepository = expenseIndexRepository;
     this.ragService = ragService;
   }
 
   async createExpense(userId: string, payload: ICreateExpenseInput): Promise<IExpense> {
+    const creditCardId = await this.resolveCreditCardId(userId, payload.creditCardId);
     const expenseEntity = new ExpenseServiceEntity({
       ...payload,
       userId,
+      creditCardId,
     });
     const createdExpense = await this.expenseRepositoryWrite.createExpense(expenseEntity);
     this.scheduleExpenseIndexing(createdExpense);
     return createdExpense;
   }
 
-  async listExpenses(userId: string, filters: IExpenseFilters): Promise<IExpense[]> {
-    if (filters.search?.trim() && this.expenseSearchService) {
-      return this.expenseSearchService.searchExpenses(userId, filters);
+  async createManyExpenses(
+    userId: string,
+    payloads: ICreateExpenseInput[],
+  ): Promise<IExpense[]> {
+    if (!payloads.length) {
+      return [];
     }
 
-    return this.expenseRepositoryRead.listExpenses({
+    const expenses = [];
+    for (const payload of payloads) {
+      const creditCardId = await this.resolveCreditCardId(userId, payload.creditCardId);
+      expenses.push(
+        new ExpenseServiceEntity({
+          ...payload,
+          userId,
+          creditCardId,
+        }),
+      );
+    }
+    const createdExpenses = await this.expenseRepositoryWrite.createManyExpenses(expenses);
+    createdExpenses.forEach((expense) => this.scheduleExpenseIndexing(expense));
+    return createdExpenses;
+  }
+
+  async listExpenses(userId: string, filters: IExpenseFilters): Promise<IExpense[]> {
+    const statusFilter =
+      filters.status === EExpenseStatus.OVERDUE || filters.status === EExpenseStatus.PENDING
+        ? undefined
+        : filters.status;
+
+    const repositoryFilters = {
       userId,
       category: filters.category,
-      status: filters.status,
+      status: statusFilter,
       referenceMonth: filters.referenceMonth,
       from: filters.from,
       to: filters.to,
       installmentGroupId: filters.installmentGroupId,
-    });
+      creditCardId: filters.creditCardId,
+    };
+
+    let expenses: IExpense[];
+    if (filters.search?.trim() && this.expenseSearchService) {
+      expenses = await this.expenseSearchService.searchExpenses(userId, {
+        ...filters,
+        status: statusFilter,
+      });
+    } else {
+      expenses = await this.expenseRepositoryRead.listExpenses(repositoryFilters);
+    }
+
+    const resolved = resolveExpensesStatus(expenses);
+
+    if (filters.status === EExpenseStatus.PENDING) {
+      return resolved.filter((expense) => expense.status === EExpenseStatus.PENDING);
+    }
+    if (filters.status === EExpenseStatus.OVERDUE) {
+      return resolved.filter((expense) => expense.status === EExpenseStatus.OVERDUE);
+    }
+    return resolved;
   }
 
   async createInstallmentExpenses(
@@ -78,6 +130,7 @@ export class ExpenseService implements IExpenseService {
       } as IThrowedError;
     }
 
+    const creditCardId = await this.resolveCreditCardId(userId, payload.creditCardId);
     const installmentGroupId = generateId();
     const amounts = splitInstallmentAmounts(payload.totalAmount, payload.totalInstallments);
     const expenses: IExpense[] = [];
@@ -106,6 +159,7 @@ export class ExpenseService implements IExpenseService {
         installmentNumber,
         totalInstallments: payload.totalInstallments,
         totalAmount: payload.totalAmount,
+        creditCardId,
       });
       expenses.push(expenseEntity);
     }
@@ -138,7 +192,7 @@ export class ExpenseService implements IExpenseService {
   async getExpenseById(userId: string, expenseId: string): Promise<IExpense> {
     const expense = await this.expenseRepositoryRead.findExpenseById(expenseId);
     this.assertExpenseOwnershipOrNotFound(expense, userId, expenseId);
-    return expense;
+    return resolveExpenseStatus(expense);
   }
 
   async updateExpenseById(
@@ -157,10 +211,18 @@ export class ExpenseService implements IExpenseService {
       } as IThrowedError;
     }
 
-    const mergedExpense = {
-      ...currentExpense,
+    const updatePayload: IUpdateExpenseInput & { updatedAt: Date } = {
       ...payload,
       updatedAt: new Date(),
+    };
+
+    if (payload.creditCardId !== undefined) {
+      updatePayload.creditCardId = await this.resolveCreditCardId(userId, payload.creditCardId);
+    }
+
+    const mergedExpense = {
+      ...currentExpense,
+      ...updatePayload,
     };
 
     try {
@@ -175,10 +237,7 @@ export class ExpenseService implements IExpenseService {
 
     const updatedExpense = await this.expenseRepositoryWrite.updateExpenseById(
       expenseId,
-      {
-        ...payload,
-        updatedAt: new Date(),
-      },
+      updatePayload,
     );
     this.assertExpenseOwnershipOrNotFound(updatedExpense, userId, expenseId);
     this.scheduleExpenseIndexing(updatedExpense);
@@ -212,6 +271,41 @@ export class ExpenseService implements IExpenseService {
     this.assertExpenseOwnershipOrNotFound(updatedExpense, userId, expenseId);
     this.scheduleExpenseIndexing(updatedExpense);
     return updatedExpense;
+  }
+
+  private async resolveCreditCardId(
+    userId: string,
+    creditCardId?: string | null,
+  ): Promise<string | undefined> {
+    if (creditCardId === undefined || creditCardId === null) {
+      return undefined;
+    }
+
+    const trimmed = String(creditCardId).trim();
+    if (!trimmed) {
+      return undefined;
+    }
+
+    if (!this.creditCardRepositoryRead) {
+      throw {
+        status: 400,
+        errorCode: EErrorCode.FIELD_INVALID,
+        message: 'Credit card validation is unavailable',
+        details: { creditCardId: trimmed },
+      } as IThrowedError;
+    }
+
+    const card = await this.creditCardRepositoryRead.findById(trimmed);
+    if (!card || card.userId !== userId) {
+      throw {
+        status: 404,
+        errorCode: EErrorCode.RESOURCE_NOT_FOUND,
+        message: 'Credit card not found',
+        details: { creditCardId: trimmed },
+      } as IThrowedError;
+    }
+
+    return card.id;
   }
 
   private scheduleExpenseIndexing(expense: IExpense): void {

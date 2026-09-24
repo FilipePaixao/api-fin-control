@@ -14,6 +14,7 @@ export interface IExpenseIndexDocument {
   description?: string;
   category: EExpenseCategory;
   categoryLabel: string;
+  searchTerms: string;
   status: EExpenseStatus;
   referenceMonth: string;
 }

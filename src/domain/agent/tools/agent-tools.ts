@@ -54,6 +54,30 @@ export const AGENT_TOOLS: ILlmToolDefinition[] = [
     },
   },
   {
+    name: 'list_incomes',
+    description:
+      'Lista entradas (rendas) do usuário com filtros opcionais. Se o usuário não citar mês, omita referenceMonth — o servidor usa o mês atual.',
+    parameters: {
+      type: 'object',
+      properties: {
+        referenceMonth: {
+          type: 'string',
+          description:
+            'Filtro AAAA-MM (opcional; se omitido ou inválido, o servidor usa o mês atual em ' +
+            `${DEFAULT_REFERENCE_TIMEZONE})`,
+        },
+        category: {
+          type: 'string',
+          enum: ['SALARY', 'FREELANCE', 'INVESTMENT', 'BONUS', 'OTHER'],
+        },
+        status: {
+          type: 'string',
+          enum: ['EXPECTED', 'RECEIVED'],
+        },
+      },
+    },
+  },
+  {
     name: 'get_regional_cost_profile',
     description:
       'Obtém benchmark de aluguel e custo de vida da região do usuário com base no CEP cadastrado. ' +
@@ -99,6 +123,34 @@ export const AGENT_TOOLS: ILlmToolDefinition[] = [
         description: { type: 'string' },
         status: { type: 'string', enum: ['PENDING', 'PAID', 'OVERDUE'] },
         dueDate: { type: 'string', description: 'Data ISO ou AAAA-MM-DD' },
+      },
+      required: ['name', 'amount', 'category'],
+    },
+  },
+  {
+    name: 'propose_create_income',
+    description:
+      'Propõe cadastro de uma nova entrada (renda). NÃO persiste — aguarda confirmação do usuário na interface. ' +
+      'Use quando tiver name, amount e category — proponha direto, sem pedir confirmação no chat. ' +
+      'Se o usuário não citar mês, omita referenceMonth — o servidor usa o mês atual.',
+    parameters: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'Nome da entrada' },
+        amount: { type: 'number', description: 'Valor em reais' },
+        category: {
+          type: 'string',
+          enum: ['SALARY', 'FREELANCE', 'INVESTMENT', 'BONUS', 'OTHER'],
+        },
+        referenceMonth: {
+          type: 'string',
+          description:
+            'Mês de referência AAAA-MM (opcional; se omitido ou inválido, o servidor usa o mês atual em ' +
+            `${DEFAULT_REFERENCE_TIMEZONE})`,
+        },
+        status: { type: 'string', enum: ['EXPECTED', 'RECEIVED'] },
+        receivedAt: { type: 'string', description: 'Data ISO ou AAAA-MM-DD' },
+        source: { type: 'string', description: 'Fonte da entrada' },
       },
       required: ['name', 'amount', 'category'],
     },

@@ -15,6 +15,7 @@ function createIncomeServiceMock(
 ): IIncomeService {
   return {
     createIncome: jest.fn(),
+    createManyIncomes: jest.fn(),
     listIncomes: jest.fn(),
     getIncomeById: jest.fn(),
     updateIncomeById: jest.fn(),
@@ -29,6 +30,7 @@ function createExpenseServiceMock(
 ): IExpenseService {
   return {
     createExpense: jest.fn(),
+    createManyExpenses: jest.fn(),
     listExpenses: jest.fn(),
     getExpenseById: jest.fn(),
     updateExpenseById: jest.fn(),
@@ -122,6 +124,42 @@ describe('When executing CREATE_EXPENSE action in AgentActionService', () => {
 
     expect(result.success).toBe(true);
     expect(expenseService.createExpense).toHaveBeenCalled();
+    expect(ragService.syncUserFinancialContext).toHaveBeenCalledWith('user-1');
+  });
+
+  it('Should create income when action type is CREATE_INCOME', async () => {
+    const incomeService = createIncomeServiceMock({
+      createIncome: jest.fn().mockResolvedValue({
+        id: 'inc-1',
+        name: 'Freelance',
+        amount: 2000,
+        category: 'FREELANCE',
+        referenceMonth: '2026-06',
+        status: 'EXPECTED',
+      }),
+    });
+    const ragService = createRagServiceMock();
+
+    const service = new AgentActionService({
+      expenseService: createExpenseServiceMock(),
+      incomeService,
+      userService: createUserServiceMock(),
+      ragService,
+      conversationService: createConversationServiceMock(),
+    });
+
+    const result = await service.executeAction('user-1', {
+      type: EAgentActionType.CREATE_INCOME,
+      payload: {
+        name: 'Freelance',
+        amount: 2000,
+        category: 'FREELANCE',
+        referenceMonth: '2026-06',
+      },
+    });
+
+    expect(result.success).toBe(true);
+    expect(incomeService.createIncome).toHaveBeenCalled();
     expect(ragService.syncUserFinancialContext).toHaveBeenCalledWith('user-1');
   });
 

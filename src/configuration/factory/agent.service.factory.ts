@@ -5,6 +5,7 @@ import { AgentKnowledgeServiceFactory } from './agent-knowledge.service.factory'
 import { ConversationServiceFactory } from './conversation.service.factory';
 import { DashboardServiceFactory } from './dashboard.service.factory';
 import { ExpenseServiceFactory } from './expense.service.factory';
+import { IncomeServiceFactory } from './income.service.factory';
 import { RegionalEconomicsServiceFactory } from './regional-economics.service.factory';
 import { UserRepositoryRead } from '../../infraestructure/repository/user/user.repository.read';
 
@@ -14,6 +15,7 @@ export class AgentServiceFactory {
       llmProvider: new OllamaLlmProvider(),
       dashboardService: DashboardServiceFactory.create(),
       expenseService: ExpenseServiceFactory.create(),
+      incomeService: IncomeServiceFactory.create(),
       conversationService: ConversationServiceFactory.create(),
       userRepositoryRead: new UserRepositoryRead(),
       systemPrompt: loadAgentSystemPrompt(),

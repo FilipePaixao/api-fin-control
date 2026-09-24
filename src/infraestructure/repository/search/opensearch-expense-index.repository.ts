@@ -26,7 +26,8 @@ const INDEX_BODY = {
             'assinatura, assinaturas, subscription, subscriptions',
             'moradia, aluguel, housing',
             'alimentacao, alimentação, food, comida',
-            'transporte, transport',
+            'transporte, transport, mobilidade, uber, estacionamento',
+            'gasolina, combustivel, combustível, posto, postos, fuel',
           ],
         },
       },
@@ -47,6 +48,7 @@ const INDEX_BODY = {
       description: { type: 'text', analyzer: 'pt_analyzer' },
       category: { type: 'keyword' },
       categoryLabel: { type: 'text', analyzer: 'pt_analyzer' },
+      searchTerms: { type: 'text', analyzer: 'pt_analyzer' },
       status: { type: 'keyword' },
       referenceMonth: { type: 'keyword' },
     },
@@ -195,7 +197,7 @@ export class OpenSearchExpenseIndexRepository implements IExpenseIndexRepository
                 {
                   multi_match: {
                     query,
-                    fields: ['name^3', 'categoryLabel^2', 'description'],
+                    fields: ['name^3', 'categoryLabel^2', 'searchTerms^2', 'description'],
                     type: 'best_fields',
                     fuzziness: 'AUTO',
                   },

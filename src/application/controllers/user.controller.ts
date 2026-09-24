@@ -33,6 +33,11 @@ export class UserController implements IController {
       this.updateSalary,
     );
     this.router.put(
+      '/users/me/profile',
+      this.authenticateMiddleware,
+      this.updateProfile,
+    );
+    this.router.put(
       '/users/me/profile/address',
       this.authenticateMiddleware,
       this.updateProfileAddress,
@@ -158,6 +163,22 @@ export class UserController implements IController {
           typeof req.body.complement === 'string' ? req.body.complement : undefined,
       });
       res.status(200).json(address);
+    } catch (error) {
+      handleTranslatedError(error, ErrorCatalog, res);
+    }
+  };
+
+  updateProfile = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const profile = await this.userService.updateProfile(req.userId!, {
+        occupationArea:
+          typeof req.body.occupationArea === 'string'
+            ? req.body.occupationArea
+            : undefined,
+        investmentProfile: req.body.investmentProfile,
+        livingSituation: req.body.livingSituation,
+      });
+      res.status(200).json(profile);
     } catch (error) {
       handleTranslatedError(error, ErrorCatalog, res);
     }

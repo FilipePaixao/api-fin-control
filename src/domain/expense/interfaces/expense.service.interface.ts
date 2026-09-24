@@ -4,6 +4,7 @@ import { EPaymentMethod } from '../entity/enums/EPaymentMethod';
 import { ICreateExpenseInput, ICreateInstallmentExpenseInput, IExpense } from '../entity/interfaces/expense.interface';
 import { IExpenseRepositoryRead } from '../repository/expense.repository.read';
 import { IExpenseRepositoryWrite } from '../repository/expense.repository.write';
+import { ICreditCardRepositoryRead } from '../../credit-card/repository/credit-card.repository.read';
 import { IExpenseIndexRepository } from '../../expense-search/interfaces/expense-index.repository';
 import { IExpenseSearchService } from '../../expense-search/interfaces/expense-search.service.interface';
 import { IRagService } from '../../rag/interfaces/rag.service.interface';
@@ -16,6 +17,7 @@ export interface IExpenseFilters {
   to?: Date;
   search?: string;
   installmentGroupId?: string;
+  creditCardId?: string;
 }
 
 export interface IUpdateExpenseInput {
@@ -27,6 +29,7 @@ export interface IUpdateExpenseInput {
   status?: EExpenseStatus;
   dueDate?: Date;
   referenceMonth?: string;
+  creditCardId?: string;
 }
 
 export interface IPayExpenseInput {
@@ -37,6 +40,7 @@ export interface IPayExpenseInput {
 export interface IParamsExpenseService {
   expenseRepositoryRead: IExpenseRepositoryRead;
   expenseRepositoryWrite: IExpenseRepositoryWrite;
+  creditCardRepositoryRead?: ICreditCardRepositoryRead;
   expenseSearchService?: IExpenseSearchService;
   expenseIndexRepository?: IExpenseIndexRepository;
   ragService?: IRagService;
@@ -44,6 +48,7 @@ export interface IParamsExpenseService {
 
 export interface IExpenseService {
   createExpense(userId: string, payload: ICreateExpenseInput): Promise<IExpense>;
+  createManyExpenses(userId: string, payloads: ICreateExpenseInput[]): Promise<IExpense[]>;
   listExpenses(userId: string, filters: IExpenseFilters): Promise<IExpense[]>;
   getExpenseById(userId: string, expenseId: string): Promise<IExpense>;
   updateExpenseById(

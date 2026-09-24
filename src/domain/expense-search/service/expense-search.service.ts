@@ -42,6 +42,8 @@ export class ExpenseSearchService implements IExpenseSearchService {
         referenceMonth: filters.referenceMonth,
         from: filters.from,
         to: filters.to,
+        installmentGroupId: filters.installmentGroupId,
+        creditCardId: filters.creditCardId,
       });
     }
 
@@ -61,6 +63,34 @@ export class ExpenseSearchService implements IExpenseSearchService {
 
     return mergedIds
       .map((expenseId) => expensesById.get(expenseId))
-      .filter((expense): expense is IExpense => Boolean(expense));
+      .filter((expense): expense is IExpense => Boolean(expense))
+      .filter((expense) => this.matchesPostIndexFilters(expense, filters));
+  }
+
+  private matchesPostIndexFilters(expense: IExpense, filters: IExpenseFilters): boolean {
+    if (filters.creditCardId && expense.creditCardId !== filters.creditCardId) {
+      return false;
+    }
+
+    if (
+      filters.installmentGroupId &&
+      expense.installmentGroupId !== filters.installmentGroupId
+    ) {
+      return false;
+    }
+
+    if (filters.from && expense.dueDate && expense.dueDate < filters.from) {
+      return false;
+    }
+
+    if (filters.to && expense.dueDate && expense.dueDate > filters.to) {
+      return false;
+    }
+
+    if ((filters.from || filters.to) && !expense.dueDate) {
+      return false;
+    }
+
+    return true;
   }
 }

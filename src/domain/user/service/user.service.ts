@@ -274,12 +274,16 @@ export class UserService implements IUserService {
     }
 
     const currentStatus = resolveVerificationStatus(user.profile);
-    assertFieldAllowedForStatus(currentStatus, 'address');
+    if (currentStatus !== EUserVerificationStatus.COMPLETED) {
+      assertFieldAllowedForStatus(currentStatus, 'address');
+    }
 
     const profile: IUserProfile = {
       ...(user.profile ?? {}),
       address,
-      verificationStatus: getNextStatus(currentStatus),
+      ...(currentStatus !== EUserVerificationStatus.COMPLETED
+        ? { verificationStatus: getNextStatus(currentStatus) }
+        : {}),
     };
 
     const updatedUser = await this.userRepositoryWrite.updateUserById(userId, {

@@ -13,6 +13,7 @@ import { EExpenseCategory } from '../../expense/entity/enums/EExpenseCategory';
 import { EExpenseStatus } from '../../expense/entity/enums/EExpenseStatus';
 import { EIncomeCategory } from '../../income/entity/enums/EIncomeCategory';
 import { EIncomeStatus } from '../../income/entity/enums/EIncomeStatus';
+import { resolveExpensesStatus } from '../../expense/utils/expense-status.utils';
 
 interface IParamsDashboardService {
   userRepositoryRead: IUserRepositoryRead;
@@ -56,8 +57,9 @@ export class DashboardService implements IDashboardService {
     const totalIncome = incomes.reduce((sum, income) => sum + income.amount, 0);
     const usingSalaryFallback = totalIncome === 0 && salaryAmount !== null;
     const effectiveIncome = totalIncome > 0 ? totalIncome : salaryAmount;
+    const resolvedExpenses = resolveExpensesStatus(expenses);
 
-    const totals = expenses.reduce(
+    const totals = resolvedExpenses.reduce(
       (acc, expense) => {
         acc.totalExpenses += expense.amount;
         if (expense.status === EExpenseStatus.PAID) acc.totalPaid += expense.amount;
@@ -85,8 +87,8 @@ export class DashboardService implements IDashboardService {
           ? Number(((totals.totalPaid / effectiveIncome) * 100).toFixed(2))
           : null,
       incomesByCategory: this.buildIncomesByCategory(incomes),
-      byCategory: this.buildByCategory(expenses),
-      topExpenses: this.buildTopExpenses(expenses),
+      byCategory: this.buildByCategory(resolvedExpenses),
+      topExpenses: this.buildTopExpenses(resolvedExpenses),
     };
   }
 

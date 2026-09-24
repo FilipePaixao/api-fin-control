@@ -7,7 +7,7 @@
     "dev": "ts-node-dev --env-file=.env src/app.ts",
     "build": "tsc -p .;yarn run copy-essentials",
     "start": "node dist/src/app.js",
-    "copy-essentials": "mkdir -p dist/src/contracts dist/src/domain/agent/prompts dist/src/infraestructure/data/regional && cp src/contracts/*.yaml dist/src/contracts && cp src/domain/agent/prompts/*.md dist/src/domain/agent/prompts && cp src/infraestructure/data/regional/*.json dist/src/infraestructure/data/regional",
+    "copy-essentials": "mkdir -p dist/src/contracts dist/src/domain/agent/prompts dist/src/domain/statement-import/prompts dist/src/infraestructure/data/regional && cp src/contracts/*.yaml dist/src/contracts && cp src/domain/agent/prompts/*.md dist/src/domain/agent/prompts && cp src/domain/statement-import/prompts/*.md dist/src/domain/statement-import/prompts && cp src/infraestructure/data/regional/*.json dist/src/infraestructure/data/regional",
     "clean": "rm -rf dist",
     "prettier": "prettier --cache --write src/**/*.ts",
     "lint": "eslint --cache .",
@@ -35,7 +35,9 @@
     "@types/jest": "^29.5.14",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/mongodb-memory-server": "^2.3.0",
+    "@types/multer": "^2.2.0",
     "@types/node": "^22.10.1",
+    "@types/pdf-parse": "^1.1.5",
     "@types/pg": "^8.20.0",
     "@types/supertest": "^6.0.2",
     "eslint": "^9.16.0",
@@ -67,6 +69,8 @@
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^8.8.3",
+    "multer": "^2.4.0",
+    "pdf-parse": "^2.4.5",
     "pg": "^8.21.0",
     "traceability": "^3.2.2"
   }

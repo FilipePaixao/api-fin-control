@@ -64,6 +64,9 @@ export class ExpenseRepositoryRead implements IExpenseRepositoryRead {
       if (filter.installmentGroupId) {
         query.installmentGroupId = filter.installmentGroupId;
       }
+      if (filter.creditCardId) {
+        query.creditCardId = filter.creditCardId;
+      }
       if (filter.from || filter.to) {
         query.dueDate = {};
         if (filter.from) {

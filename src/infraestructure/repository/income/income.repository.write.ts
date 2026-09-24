@@ -22,6 +22,27 @@ export class IncomeRepositoryWrite implements IIncomeRepositoryWrite {
     }
   }
 
+  async createManyIncomes(incomes: IIncome[]): Promise<IIncome[]> {
+    try {
+      if (!incomes.length) {
+        return [];
+      }
+      const createdIncomes = await IncomeModel.insertMany(
+        incomes.map((income) => internalToDb(income)),
+      );
+      return createdIncomes.map(dbToInternal);
+    } catch (error: any) {
+      serviceLogErrorHandler(error, {
+        eventName: 'IncomeRepositoryWrite.createManyIncomes',
+        eventData: { count: incomes.length },
+      });
+      throw {
+        status: 500,
+        errorCode: EErrorCode.DATABASE_ERROR,
+      } as IThrowedError;
+    }
+  }
+
   async updateIncomeById(
     id: string,
     payload: Partial<IIncome>,
