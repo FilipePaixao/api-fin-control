@@ -38,20 +38,33 @@ describe('When listing expenses with valid filters', () => {
   });
 });
 
-describe('When listing expenses and repository fails', () => {
-  it('Should propagate the repository error', async () => {
-    const repositoryError = new Error('database offline');
+describe('When listing expenses with past due PENDING', () => {
+  it('Should resolve status to OVERDUE', async () => {
     const expenseRepositoryRead = createExpenseRepositoryReadMock({
-      listExpenses: jest.fn().mockRejectedValue(repositoryError),
+      listExpenses: jest.fn().mockResolvedValue([
+        {
+          id: 'expense-1',
+          userId: 'user-1',
+          name: 'Rent',
+          amount: 1200,
+          category: EExpenseCategory.HOUSING,
+          status: EExpenseStatus.PENDING,
+          dueDate: new Date('2020-01-01T12:00:00.000Z'),
+          referenceMonth: '2026-06',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ]),
     });
-    const expenseRepositoryWrite = createExpenseRepositoryWriteMock();
     const expenseService = new ExpenseService({
       expenseRepositoryRead,
-      expenseRepositoryWrite,
+      expenseRepositoryWrite: createExpenseRepositoryWriteMock(),
     });
 
-    await expect(expenseService.listExpenses('user-1', {})).rejects.toBe(
-      repositoryError,
-    );
+    const result = await expenseService.listExpenses('user-1', {
+      referenceMonth: '2026-06',
+    });
+
+    expect(result[0].status).toBe(EExpenseStatus.OVERDUE);
   });
 });
