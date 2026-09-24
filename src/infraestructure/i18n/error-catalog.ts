@@ -49,6 +49,27 @@ export const ErrorCatalog: Catalog<EErrorCode> = {
     en: 'AI assistant unavailable. Please ensure Ollama is running.',
     es: 'Asistente de IA no disponible. Verifique que Ollama esté en ejecución.',
   },
+  [EErrorCode.IMPORT_INVALID_PDF]: {
+    'pt-BR': 'Arquivo PDF inválido. Envie um PDF válido de fatura ou extrato.',
+    en: 'Invalid PDF file. Please upload a valid invoice or statement PDF.',
+    es: 'Archivo PDF inválido. Envíe un PDF válido de factura o extracto.',
+  },
+  [EErrorCode.IMPORT_NO_TEXT]: {
+    'pt-BR':
+      'Não foi possível ler o texto do PDF. Use um PDF com texto selecionável (sem escaneamento).',
+    en: 'Could not read text from the PDF. Use a PDF with selectable text (not a scan).',
+    es: 'No se pudo leer el texto del PDF. Use un PDF con texto seleccionable (sin escaneo).',
+  },
+  [EErrorCode.IMPORT_NO_TRANSACTIONS]: {
+    'pt-BR': 'Nenhuma transação foi encontrada no documento enviado.',
+    en: 'No transactions were found in the uploaded document.',
+    es: 'No se encontraron transacciones en el documento enviado.',
+  },
+  [EErrorCode.CREDIT_CARD_IN_USE]: {
+    'pt-BR': 'Não é possível excluir o cartão enquanto houver despesas vinculadas.',
+    en: 'Cannot delete the credit card while linked expenses exist.',
+    es: 'No se puede eliminar la tarjeta mientras haya gastos vinculados.',
+  },
   [EErrorCode.SERVICE_USER_UNKNOWN]: {
     'pt-BR': 'Usuário não encontrado. Verifique se os dados estão corretos.',
     en: 'User not found. Please check that the data is correct.',
