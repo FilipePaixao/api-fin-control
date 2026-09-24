@@ -18,6 +18,7 @@ export function dbToInternal(expense: IMExpense): IExpense {
     installmentNumber: expense.installmentNumber,
     totalInstallments: expense.totalInstallments,
     totalAmount: expense.totalAmount,
+    creditCardId: expense.creditCardId,
     createdAt: expense.createdAt,
     updatedAt: expense.updatedAt,
   };
@@ -42,5 +43,6 @@ export function internalToDb(
     installmentNumber: expense.installmentNumber,
     totalInstallments: expense.totalInstallments,
     totalAmount: expense.totalAmount,
+    creditCardId: expense.creditCardId,
   };
 }
