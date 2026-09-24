@@ -10,6 +10,7 @@ export interface IExpenseReadFilter {
   from?: Date;
   to?: Date;
   installmentGroupId?: string;
+  creditCardId?: string;
 }
 
 export interface IExpenseRepositoryRead {
