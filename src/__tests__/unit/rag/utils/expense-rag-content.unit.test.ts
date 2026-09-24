@@ -23,9 +23,30 @@ describe('When building expense RAG content', () => {
     expect(content).toContain('Despesa: Netflix');
     expect(content).toContain('Descrição: Plano premium');
     expect(content).toContain('Categoria: Assinaturas');
+    expect(content).toContain('Termos de busca:');
+    expect(content).toContain('assinatura');
     expect(content).toContain('Status: Pendente');
     expect(content).toContain('Mês de referência: 2026-06');
     expect(content).toContain('Vencimento: 2026-06-15');
     expect(content).toContain('Forma de pagamento: Cartão de crédito');
+  });
+
+  it('Should enrich fuel merchants with gasolina terms for semantic search', () => {
+    const content = buildExpenseRagContent({
+      id: 'expense-2',
+      userId: 'user-1',
+      name: 'Auto Posto Pelanda',
+      amount: 120,
+      category: EExpenseCategory.TRANSPORT,
+      status: EExpenseStatus.PAID,
+      referenceMonth: '2026-09',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    expect(content).toContain('Despesa: Auto Posto Pelanda');
+    expect(content).toContain('Termos de busca:');
+    expect(content).toContain('gasolina');
+    expect(content).toContain('posto');
   });
 });
