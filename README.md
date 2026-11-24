@@ -1,6 +1,6 @@
 # FinControl — Backend API
 
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/FilipePaixao/financial-backend)
+[[Ask DeepWiki]](https://deepwiki.com/FilipePaixao/financial-backend)
 
 Backend do **FinControl** — projeto **em desenvolvimento** de controle financeiro pessoal com assistente de IA integrado. A API expõe gestão de usuários, despesas e dashboard, **onboarding conversacional**, perfil personalizado, **benchmark regional de custo de vida** e busca híbrida de despesas, além de um agente financeiro experimental (consulta dados, propõe ações, aprende com conversas anonimizadas).
 
